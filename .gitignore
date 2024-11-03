@@ -1,0 +1,14 @@
+__pycache__/
+venv/
+.venv
+.idea
+test.py
+gimp/
+.pytest_cache/
+README
+db.sqlite3
+db.sqlite3.back
+.env
+setup.sh
+.vscode/
+mafia-bot.service
