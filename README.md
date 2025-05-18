@@ -88,18 +88,42 @@ python main.py
 ### 🔊 Голосовое сопровождение игры
 Бот использует аудиофайлы, сгенерированные нейросетью с телеграмма: [@silero_voice_bot](https://t.me/silero_voice_bot)
 #### 🎧 Аудиотека бота
+**Начало игры:**
 
+<audio controls>
+  <source src="https://github.com/paranoik1/MafiaBot/raw/main/audio/ready.ogg" type="audio/ogg">
+  Ваш браузер не поддерживает аудио элементы.
+</audio>
 
-| Файл | Описание | Прослушать |
-|------|----------|------------|
-| `ready.ogg` | Начало игры, знакомство с правилами | [▶️ Прослушать](audio/ready.ogg) |
-| `day.ogg`   | Оповещение о начале дневной фазы | [▶️ Прослушать](audio/day.ogg) |
-| `night.ogg` | Оповещение о ночной фазы | [▶️ Прослушать](audio/night.ogg) |
-| `voting.ogg` | Уведомление о начале голосования | [▶️ Прослушать](audio/voting.ogg) |
-| `result_voting.ogg` | Озвучивание результатов голосования | [▶️ Прослушать](audio/result_voting.ogg) |
-| `win.ogg`   | Уведомления о победителе | [▶️ Прослушать](audio/win.ogg) |
+**Дневная фаза:**
 
+<audio controls>
+  <source src="https://github.com/paranoik1/MafiaBot/raw/main/audio/day.ogg" type="audio/ogg">
+</audio>
 
+**Ночная фаза:**
+
+<audio controls>
+  <source src="https://github.com/paranoik1/MafiaBot/raw/main/audio/night.ogg" type="audio/ogg">
+</audio>
+
+**Голосование:**
+
+<audio controls>
+  <source src="https://github.com/paranoik1/MafiaBot/raw/main/audio/voting.ogg" type="audio/ogg">
+</audio>
+
+**Результаты:**
+
+<audio controls>
+  <source src="https://github.com/paranoik1/MafiaBot/raw/main/audio/result_voting.ogg" type="audio/ogg">
+</audio>
+
+**Победа:**
+
+<audio controls>
+  <source src="https://github.com/paranoik1/MafiaBot/raw/main/audio/win.ogg" type="audio/ogg">
+</audio>
 
 ## 📸 Скриншоты
 
