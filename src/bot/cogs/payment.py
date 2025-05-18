@@ -26,7 +26,7 @@ class PaymentCog(commands.Cog):
             )
         )
 
-        await inter.send(embed=embed, view=BuyPremiumView())
+        await inter.send(embed=embed, view=BuyPremiumView(), ephemeral=True)
 
     @commands.Cog.listener(Event.button_click)
     async def check_payment(self, inter: MessageInteraction):
@@ -36,14 +36,14 @@ class PaymentCog(commands.Cog):
 
         await inter.response.defer()
 
-        label, type, author_id = data[1:]
+        label, type = data[1:] #, author_id
 
-        if str(inter.author.id) != author_id:
-            return await inter.send("Данную операцию продолжить может только человек, запустивший данную команду", ephemeral=True)
+        # if str(inter.author.id) != author_id:
+        #     return await inter.send("Данную операцию продолжить может только человек, запустивший данную команду", ephemeral=True)
         
         premium_id = inter.user.id if type == PremiumType.USER else inter.guild_id
 
-        if await get_premium(premium_id):
+        if await get_premium(premium_id) or premium_id == self.bot.owner.id:
             return await inter.send("Вы уже есть в базе", ephemeral=True)
 
         is_success = await check_pay(label)
@@ -60,7 +60,7 @@ class PaymentCog(commands.Cog):
             description=PAYMENT_SUCCESS_TEXT
         )
 
-        await inter.edit_original_message(embed=embed)
+        await inter.send(embed=embed, ephemeral=True)
 
 
 def setup(bot):

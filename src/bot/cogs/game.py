@@ -18,7 +18,7 @@ class GameCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(name="start-mafia", description="Начать игру")
+    @commands.slash_command(name="start-mafia", description="Начать игру", dm_permission=False)
     @is_server_exists(text_error="Игра уже существует", is_true=False)
     async def start_mafia(self, inter: ApplicationCommandInteraction, server: NoneType):
         server = MafiaDiscordServer(inter.guild, inter.user, inter)
@@ -29,21 +29,21 @@ class GameCog(commands.Cog):
             view=PreStartMafiaView(),
         )
 
-    @commands.slash_command(name="voting", description="Начать голосование")
+    @commands.slash_command(name="voting", description="Начать голосование", dm_permission=False)
     @is_server_exists()
     @is_leader
     @is_game_started()
     async def voting(self, inter: ApplicationCommandInteraction, server: MafiaDiscordServer):
         await server.exec_voting(inter)
 
-    @commands.slash_command(name="night", description="Начать ночь")
+    @commands.slash_command(name="night", description="Начать ночь", dm_permission=False)
     @is_server_exists()
     @is_leader
     @is_game_started()
     async def night(self, inter: ApplicationCommandInteraction, server: MafiaDiscordServer):
         await server.exec_night(inter)
 
-    @commands.slash_command(name="stop-mafia", description="Закончить игру")
+    @commands.slash_command(name="stop-mafia", description="Закончить игру", dm_permission=False)
     @is_server_exists("Игра не найдена")
     @is_leader
     async def stop_mafia(self, inter: ApplicationCommandInteraction, server: MafiaDiscordServer):

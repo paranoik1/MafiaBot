@@ -11,7 +11,8 @@ class SupportCog(commands.Cog):
 
     @commands.slash_command(
         name="send-owner",
-        description="Предложить идею, указать на ошибку или посоветовать чего либо для улучшения бота"
+        description="Предложить идею, указать на ошибку или посоветовать чего либо для улучшения бота",
+        dm_permission=False
     )
     @commands.cooldown(1, 3600, BucketType.user)
     async def send_owner(
