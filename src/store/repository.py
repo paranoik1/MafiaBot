@@ -43,7 +43,7 @@ class Repository[T]:
         return self._store.get(id)
 
     def remove(self, id: int):
-        self._store.pop(id)
+        self._store.pop(id, None)
 
     def filter(self, func_filter: Callable[[T], bool]):
         new_repository = Repository[T]()
