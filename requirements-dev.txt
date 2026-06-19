@@ -1,0 +1,6 @@
+black==26.5.1
+isort==8.0.1
+mypy==2.1.0
+mypy_extensions==1.1.0
+pytest==8.3.3
+
