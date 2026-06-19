@@ -12,3 +12,4 @@ db.sqlite3.back
 setup.sh
 .vscode/
 mafia-bot.service
+.dmypy.json

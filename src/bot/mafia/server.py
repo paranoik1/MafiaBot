@@ -111,7 +111,6 @@ class MafiaDiscordServer(Server):
                 self.night_team_choose.append(team)
 
         if self.night_team_choose:
-            self.night_team_choose = self.night_team_choose
             await asyncio.gather(*[team.start_vote() for team in self.night_team_choose])
 
         if self.night_players_choose:
@@ -181,6 +180,8 @@ class MafiaDiscordServer(Server):
     async def results_voting(self):
         targets = self.get_result_voting()
         if len(targets) > 1:
+            await self.channel_interaction.send("Ничья — переголосуйте!")
+            self.clear_cache_voting()
             return False
 
         target = targets[0]

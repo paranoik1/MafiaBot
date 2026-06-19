@@ -37,7 +37,7 @@ class SupportCog(commands.Cog):
         )
 
         await self.bot.owner.send(embed=embed)
-        await inter.edit_original_message("Сообщение отправлено!")
+        await inter.edit_original_message(content="Сообщение отправлено!")
 
 
 def setup(bot):

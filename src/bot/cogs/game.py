@@ -1,6 +1,6 @@
 from types import NoneType
 
-from disnake import MessageInteraction, Event, Member, VoiceState
+from disnake import MessageInteraction, Event # type: ignore
 from disnake.ext import commands
 
 from src.bot.mafia.decorators import *
@@ -142,6 +142,9 @@ class GameCog(commands.Cog):
 
         if not author:
             return await inter.send("Вы мертвы или не являетесь участником игры", ephemeral=True)
+
+        if not target:
+            return await inter.send("Целевой игрок не найден", ephemeral=True)
 
         await inter.response.defer()
 

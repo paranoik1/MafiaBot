@@ -22,7 +22,7 @@ class OwnerCog(commands.Cog):
         emb = Embed(title="Что с ботом", color=Color.red())
         emb.add_field("Кол-во серверов:", len(self.bot.guilds))
         emb.add_field("Кол-во игр:", len(SERVER_REPOSITORY))
-        emb.add_field("Время работы:", str((datetime.now() - START_TIME).seconds) + " секунд")
+        emb.add_field("Время работы:", str(int((datetime.now() - START_TIME).total_seconds())) + " секунд")
 
         await ctx.send(view=StateView(), embed=emb)
 
