@@ -372,7 +372,7 @@ class Kamikaze(ActivePlayer):
 
     async def perform_action(self, player: Optional["Player"] = None):
         if self.target.role == Comissar.ROLE:
-            self.target.kill(self)
+            await self.target.kill(self)
             await self.kill(self)
 
 
