@@ -5,7 +5,7 @@ from src.bot.config import GENERAL_COLOR
 from src.bot.mafia.utils import get_data_from_custom_id
 from src.bot.texts import BUY_TEXT, PAYMENT_SUCCESS_TEXT
 from src.bot.views.buy import BuyPremiumView
-from src.db.engine import insert_premium, get_premium
+from src.db.engine import insert_premium, check_premium
 from src.enums import PremiumType
 from src.payment.utils import check_pay
 from src.store.config import YoomoneyConfig
@@ -38,12 +38,13 @@ class PaymentCog(commands.Cog):
 
         label, type = data[1:] #, author_id
 
+        # NOTE: условие на соответствие авторов не нужно, так как ephemeral=True позволяет видеть сообщение только тому, кто является автором начала взаимодействия
         # if str(inter.author.id) != author_id:
         #     return await inter.send("Данную операцию продолжить может только человек, запустивший данную команду", ephemeral=True)
         
         premium_id = inter.user.id if type == PremiumType.USER else inter.guild_id
 
-        if await get_premium(premium_id) or premium_id == self.bot.owner.id:
+        if await check_premium(premium_id) or premium_id == self.bot.owner.id:
             return await inter.send("Вы уже есть в базе", ephemeral=True)
 
         is_success = await check_pay(label)

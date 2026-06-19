@@ -5,6 +5,7 @@ from src.bot.mafia.utils import *
 from src.bot.modals.quantity_players import QuantityPlayersModal
 from src.bot.views.game_roles import GameManageRoles
 from src.enums import GameMode
+from src.mafia.player import PrePlayer
 from src.mafia.settings import Settings
 from src.bot.mafia.server import MafiaDiscordServer
 
@@ -51,6 +52,9 @@ class ServerSettingsView(View):
 
         if self.settings.game_mode == GameMode.MODERATOR and self.server.leader in self.server.pre_players:
             self.server.pre_players.remove(self.server.leader.id)
+        elif self.settings.game_mode == GameMode.AUTOMATIC and self.server.leader not in self.server.pre_players:
+            pre_player = PrePlayer(self.server.leader.id, self.server.leader.mention)
+            self.server.pre_players.add(pre_player.id, pre_player)
 
         await inter.send("Режим игры был изменен на " + self.settings.game_mode, ephemeral=True)
 

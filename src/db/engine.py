@@ -20,11 +20,20 @@ async def create_tables() -> None:
         await conn.run_sync(Base.metadata.create_all)
 
 
-async def get_premium(id: int):
+async def check_premium(id: int) -> bool:
     sql = select(Premium).where(Premium.id == id)
     async with engine.connect() as conn:
         res = await conn.execute(sql)
-        return res.first()
+        row = res.first()
+
+    if row is None:
+        return False
+
+    if row.expire < datetime.now():
+        await delete_premium(id)
+        return False
+
+    return True
 
 
 async def insert_premium(id: int, type: PremiumType) -> None:
@@ -43,5 +52,15 @@ async def delete_premium(id: int) -> None:
         await conn.execute(sql)
 
 
+async def cleanup_expired_premium() -> int:
+    sql = delete(Premium).where(Premium.expire < datetime.now())
+    async with engine.begin() as conn:
+        result = await conn.execute(sql)
+        return result.rowcount
+
+
 async def db_init():
     await create_tables()
+    deleted = await cleanup_expired_premium()
+    if deleted:
+        print(f"Очищено устаревших premium-записей: {deleted}")

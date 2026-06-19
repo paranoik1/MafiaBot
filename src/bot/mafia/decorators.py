@@ -4,7 +4,7 @@ from typing import Coroutine, TYPE_CHECKING
 from disnake import ApplicationCommandInteraction, Interaction, MessageInteraction
 from disnake.ui import Button
 
-from src.db.engine import get_premium
+from src.db.engine import check_premium
 from src.enums import GameMode
 from src.store.globals import COOLDOWN_LIST
 from src.store.utils import get_server
@@ -45,7 +45,7 @@ def is_game_started(is_true: bool = True):
 def is_premium(message: str = "Приобретите премиум версию, чтобы получить доступ к данной функции"):
     def predicate(func):
         async def wrapper(self, inter: ApplicationCommandInteraction, server: "MafiaDiscordServer"):
-            if not await get_premium(inter.guild.id) and not await get_premium(inter.user.id):
+            if not await check_premium(inter.guild.id) and not await check_premium(inter.user.id):
                 return await inter.send(message, ephemeral=True)
 
             return await func(self, inter=inter, server=server)
