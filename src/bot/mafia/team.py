@@ -1,6 +1,9 @@
+import logging
 from typing import TYPE_CHECKING
 
 from disnake import Message
+
+logger = logging.getLogger(__name__)
 
 from src.mafia.active_player import ActiveTeamPlayer, ActivePlayer
 from src.mafia.teams import ActiveTeam, MafiaTeam
@@ -27,6 +30,10 @@ class ActiveTeamDiscord(ActiveTeam):
 
         for active_player in active_team_players:
             user = self.server.get_discord_user(active_player.id)
+            if user is None:
+                logger.warning("Игрок %s: не найден в Discord — голосование команды пропущено", active_player.id)
+                continue
+
             embed = get_embed_voting(
                 server=self.server,
                 voting_instance=self,
@@ -54,6 +61,9 @@ class ActiveTeamDiscord(ActiveTeam):
 
         for player in players_participates:
             user = self.server.get_discord_user(player.id)
+            if user is None:
+                logger.warning("Игрок %s: не найден в Discord — отправка роли команды пропущена", player.id)
+                continue
             await user.send(embed=embed)
 
     async def update_info_voting(self):
@@ -70,6 +80,7 @@ class ActiveTeamDiscord(ActiveTeam):
 
     async def process_end_voting(self):
         if not self.is_all_players_voted():
+            logger.info("Не все игроки проголосовали — ожидание")
             return
 
         targets = self.get_result_voting()
@@ -116,6 +127,7 @@ class MafiaTeamDiscord(MafiaTeam, ActiveTeamDiscord):
 
     async def dispute(self, targets: list[Player]):
         if not self.godfather:
+            logger.warning("Нет Крёстного отца — разрешение ничьи мафии пропущено")
             return
 
         info = self.get_vote_info()
@@ -132,6 +144,8 @@ class MafiaTeamDiscord(MafiaTeam, ActiveTeamDiscord):
             user = self.server.get_discord_user(player.id)
             if user:
                 await user.send(content)
+            else:
+                logger.warning("Игрок %s: не найден в Discord — сообщение команды пропущено", player.id)
 
     async def comissar_founded(self, comissar: Comissar):
         await self._send_messages_team(f"{Kamikaze.ROLE} обнаружил Комиссара - {comissar.username}")

@@ -1,8 +1,11 @@
 import asyncio
+import logging
 from asyncio import gather
 
 import disnake
 from disnake import Guild, Interaction, MessageInteraction
+
+logger = logging.getLogger(__name__)
 
 from src.bot.mafia.team import MafiaTeamDiscord, ActiveTeamDiscord
 from src.bot.mafia.utils import *
@@ -76,6 +79,7 @@ class MafiaDiscordServer(Server):
     async def send_input_active_role(self, player: ActivePlayer):
         user = self.get_discord_user(player.id)
         if user is None:
+            logger.warning("Игрок %s: не найден в Discord — ночной ввод пропущен", player.id)
             return
 
         role_info = ROLES_INFO[player.role]
@@ -133,6 +137,8 @@ class MafiaDiscordServer(Server):
         user = self.get_discord_user(witness.id)
         if user:
             await user.send(f"Вы увидели, как {killer.username} убил {target.username}")
+        else:
+            logger.warning("Свидетель %s: не найден в Discord — уведомление об убийце пропущено", witness.id)
 
     async def check_win(self):
         team = super().check_win()
@@ -231,6 +237,8 @@ class MafiaDiscordServer(Server):
 
             if user:
                 self.add_discord_user(player.id, user)
+            else:
+                logger.error("Игрок %s: не найден в Discord — роль не отправлена, игрок потерян", player.id)
 
         await gather(*[send_role(player) for player in players])
 

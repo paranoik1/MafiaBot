@@ -1,6 +1,9 @@
+import logging
 from typing import Optional
 
 from .active_player import ActiveTeamPlayer, ActivePlayer
+
+logger = logging.getLogger(__name__)
 from .base import NightEvent
 from .enums import TeamEnum, ActionNightEnum, ServerState
 from .player import Player
@@ -37,6 +40,8 @@ class Mafia(ActiveTeamPlayer):
     async def perform_action(self, player: Optional["Player"] = None):
         if player is not None:
             await player.kill(self)
+        else:
+            logger.debug("Мафия.perform_action: player is None — действие пропущено")
 
 
 class Doctor(ActivePlayer):
@@ -65,6 +70,8 @@ class Doctor(ActivePlayer):
     async def perform_action(self, player: Optional["Player"] = None):
         if self.patient is not None:
             self.patient.is_alive = True
+        else:
+            logger.debug("Доктор.perform_action: patient is None — некого лечить")
 
     def is_valid(self, player: Player) -> bool:
         return self.patient != player and player in self.server.get_players_alive()
@@ -137,15 +144,19 @@ class Werewolf(ActiveTeamPlayer):
 
     async def reincarnate(self, player: Player):
         if player.team.title != TeamEnum.MAFIA:
+            logger.debug("Оборотень.reincarnate: убитый не мафия — перерождение пропущено")
             return
 
         self.team = player.team
         self.is_mafia = True
         self.server.signals.on_death_player.unsubscribe(self.reincarnate)
+        logger.info("Оборотень %s переродился в команду мафии", self.id)
 
     async def perform_action(self, player: Optional["Player"] = None):
         if self.is_mafia and player is not None:
             await player.kill(self)
+        else:
+            logger.debug("Оборотень.perform_action: не в мафии или player is None — действие пропущено")
 
 
 class Bodyguard(ActivePlayer):
@@ -180,6 +191,10 @@ class Bodyguard(ActivePlayer):
             player.is_alive = True
             if player.killer is not None:
                 await self.kill(player.killer)
+            else:
+                logger.debug("Телохранитель.on_killed_player: killer is None — возмездие пропущено")
+        else:
+            logger.debug("Телохранитель.on_killed_player: убит не подопечный — действие пропущено")
 
 
 class Maniac(ActivePlayer):
@@ -205,6 +220,8 @@ class Maniac(ActivePlayer):
     async def perform_action(self, player: Optional["Player"] = None):
         if player is not None:
             await player.kill(self)
+        else:
+            logger.debug("Маньяк.perform_action: player is None — действие пропущено")
 
 
 class Mistress(ActivePlayer):
@@ -236,6 +253,10 @@ class Mistress(ActivePlayer):
             player.acquitted = True
             if isinstance(player, ActivePlayer):
                 player.is_night_activity = False
+            else:
+                logger.debug("Любовница.new_night_event: player не ActivePlayer — ночная активность не заблокирована")
+        else:
+            logger.debug("Любовница.new_night_event: player is None — эффекты не применены")
 
         return NightEvent(
             action=ActionNightEnum.DATE_NIGHT,
@@ -246,16 +267,24 @@ class Mistress(ActivePlayer):
     async def perform_action(self, player: Optional["Player"] = None):
         if isinstance(self.target, ActivePlayer):
             self.target.is_night_activity = True
+        else:
+            logger.debug("Любовница.perform_action: target не ActivePlayer — ночная активность не восстановлена")
 
     async def on_killed_player(self, player: Player):
         if player == self.target:
             if player.killer is not None:
                 await self.kill(player.killer)
+            else:
+                logger.debug("Любовница.on_killed_player: killer is None — месть пропущена")
+        else:
+            logger.debug("Любовница.on_killed_player: убит не целью — действие пропущено")
 
     async def change_target_can_vote(self, state: ServerState):
         if state == ServerState.NIGHT and self.target:
             self.target.is_can_vote = True
             self.target.acquitted = False
+        else:
+            logger.debug("Любовница.change_target_can_vote: не ночь или нет цели — голос не восстановлен")
 
 
 class GodFather(Mafia):
@@ -300,6 +329,8 @@ class Witness(ActivePlayer):
     async def on_killed_player(self, player: Player):
         if self.target and (self.target == player or self.target == player.killer):
             await self.server.signals.on_witness_saw_killer.emit(self, player.killer, player)
+        else:
+            logger.debug("Свидетель.on_killed_player: цель не совпадает — уведомление пропущено")
 
 
 class Rapist(ActivePlayer):
@@ -327,6 +358,10 @@ class Rapist(ActivePlayer):
             player.is_can_vote = False
             if isinstance(player, ActivePlayer):
                 player.is_night_activity = False
+            else:
+                logger.debug("Насильник.new_night_event: player не ActivePlayer — ночная активность не заблокирована")
+        else:
+            logger.debug("Насильник.new_night_event: player is None — эффекты не применены")
 
         return NightEvent(
             action=ActionNightEnum.RETRIBUTION,
@@ -340,10 +375,14 @@ class Rapist(ActivePlayer):
     async def perform_action(self, player: Optional["Player"] = None):
         if isinstance(self.target, ActivePlayer):
             self.target.is_night_activity = True
+        else:
+            logger.debug("Насильник.perform_action: target не ActivePlayer — ночная активность не восстановлена")
 
     async def change_target_can_vote(self, state: ServerState):
         if state == ServerState.NIGHT and self.target:
             self.target.is_can_vote = True
+        else:
+            logger.debug("Насильник.change_target_can_vote: не ночь или нет цели — голос не восстановлен")
 
 
 class Kamikaze(ActivePlayer):
@@ -387,6 +426,8 @@ class Kamikaze(ActivePlayer):
         if self.target is not None and self.target.role == Comissar.ROLE:
             await self.target.kill(self)
             await self.kill(self)
+        else:
+            logger.debug("Камикадзе.perform_action: цель не Комиссар или None — самоубийство пропущено")
 
 
 class Necromancer(ActivePlayer):
@@ -429,6 +470,7 @@ class Necromancer(ActivePlayer):
 
     async def change_can_new_night_event(self, state: ServerState):
         if state != ServerState.NIGHT:
+            logger.debug("Некромант.change_can_new_night_event: не ночь — пропущено")
             return
 
         players_death = self.get_players_death()
@@ -438,6 +480,8 @@ class Necromancer(ActivePlayer):
         if player is not None:
             player.is_alive = False
             await self.server.signals.on_awakened_player_sleep.emit(player)
+        else:
+            logger.debug("Некромант.perform_action: player is None — пробуждённый не усыплён")
 
     def get_target_list(self):
         return self.get_players_death()

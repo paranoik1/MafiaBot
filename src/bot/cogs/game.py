@@ -1,6 +1,9 @@
+import logging
 from typing import cast
 
 from disnake import ApplicationCommandInteraction, MessageInteraction, Event
+
+logger = logging.getLogger(__name__)
 from disnake.ext import commands
 
 from src.bot.mafia.decorators import *
@@ -170,6 +173,8 @@ class GameCog(commands.Cog):
             target: Player
     ):
         if server.state != ServerState.DAY:
+            logger.info("Голос от %s проигнорирован — не дневное время (state=%s)", author.id, server.state)
+            await inter.send("Сейчас не время для голосования.", ephemeral=True)
             return
 
         server.vote(author, target)
@@ -197,6 +202,7 @@ class GameCog(commands.Cog):
             team: str
     ):
         if server.state != ServerState.NIGHT:
+            logger.info("Голос команды от %s проигнорирован — не ночное время (state=%s)", author.id, server.state)
             return
 
         if isinstance(author, ActiveTeamPlayer):

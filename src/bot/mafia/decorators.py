@@ -1,5 +1,8 @@
+import logging
 from asyncio import iscoroutinefunction
 from typing import Coroutine, TYPE_CHECKING
+
+logger = logging.getLogger(__name__)
 
 from disnake import ApplicationCommandInteraction, Interaction, MessageInteraction
 from disnake.ui import Button
@@ -72,10 +75,12 @@ def is_game_mode(game_mode: GameMode):
         async def aio_wrapper(self, *args, **kwargs):
             if check(self.server):
                 return await func(self, *args, **kwargs)
+            logger.info("%s: пропущен — режим игры не подходит", func.__name__)
 
         def wrapper(self, *args, **kwargs):
             if check(self.server):
                 return func(self, *args, **kwargs)
+            logger.info("%s: пропущен — режим игры не подходит", func.__name__)
 
         if iscoroutinefunction(func):
             return aio_wrapper
@@ -92,10 +97,12 @@ def is_voice_accompaniment(func):
     async def aio_wrapper(self, *args, **kwargs):
         if check(self.server):
             return await func(self, *args, **kwargs)
+        logger.info("%s: пропущен — голосовое сопровождение выключено", func.__name__)
 
     def wrapper(self, *args, **kwargs):
         if check(self.server):
             return func(self, *args, **kwargs)
+        logger.info("%s: пропущен — голосовое сопровождение выключено", func.__name__)
 
     if iscoroutinefunction(func):
         return aio_wrapper

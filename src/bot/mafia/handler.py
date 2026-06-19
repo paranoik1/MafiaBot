@@ -1,7 +1,9 @@
 import asyncio
 import io
-
+import logging
 from typing import TYPE_CHECKING
+
+logger = logging.getLogger(__name__)
 
 from disnake import Embed, MessageInteraction, User, VoiceClient, VoiceChannel, Event, Member, VoiceState, \
     FFmpegPCMAudio
@@ -151,6 +153,7 @@ class VoiceHandler(Handler):
 
     def _is_mafia_voice_channel(self, channel: VoiceChannel | None) -> bool:
         if not self.voice_client or not self.voice_client.channel or not channel:
+            logger.debug("Голосовой клиент или канал отсутствует — проверка голосового канала пропущена")
             return False
         return channel.id == self.voice_client.channel.id
 
@@ -158,8 +161,10 @@ class VoiceHandler(Handler):
             self, member: Member, before: VoiceState, after: VoiceState
     ):
         if self.server.is_started:
+            logger.debug("Игра уже началась — изменение голосового состояния проигнорировано")
             return
         if after.channel == before.channel:
+            logger.debug("Тот же голосовой канал — изменений нет")
             return
         
         player_list = [player.id for player in self.server.players]
@@ -188,6 +193,7 @@ class VoiceHandler(Handler):
 
     def _play(self, source: str | io.BufferedIOBase, *args, **kwargs):
         if not self.voice_client:
+            logger.warning("voice_client отсутствует — воспроизведение аудио пропущено")
             return
 
         if self.voice_client.is_playing():
