@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING
+
 from disnake import Message
 
 from src.mafia.active_player import ActiveTeamPlayer, ActivePlayer
@@ -107,7 +109,7 @@ class MafiaTeamDiscord(MafiaTeam, ActiveTeamDiscord):
     def __init__(self, server: "MafiaDiscordServer"):
         description_vote = "Проголосуйте за игрока, которого вы бы хотели убить"
 
-        super().__init__(server, description_vote=description_vote)
+        super().__init__(server, description_vote=description_vote) # type: ignore
 
         self.roles_participating_in_voting = [Mafia.ROLE, GodFather.ROLE, Werewolf.ROLE]
         self.server.signals.on_kamikaze_found_commissar.subscribe(self.comissar_founded)
@@ -128,8 +130,8 @@ class MafiaTeamDiscord(MafiaTeam, ActiveTeamDiscord):
         players = self.get_players_participating_in_voting()
         for player in players:
             user = self.server.get_discord_user(player.id)
-
-            await user.send(content)
+            if user:
+                await user.send(content)
 
     async def comissar_founded(self, comissar: Comissar):
         await self._send_messages_team(f"{Kamikaze.ROLE} обнаружил Комиссара - {comissar.username}")

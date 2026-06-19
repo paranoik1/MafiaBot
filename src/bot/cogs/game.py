@@ -1,16 +1,16 @@
-from types import NoneType
+from typing import cast
 
-from disnake import MessageInteraction, Event # type: ignore
+from disnake import ApplicationCommandInteraction, MessageInteraction, Event
 from disnake.ext import commands
 
 from src.bot.mafia.decorators import *
 from src.bot.mafia.utils import *
 from src.bot.texts import DESCRIPTION_VOTING
 from src.bot.views.pre_start_view import PreStartMafiaView
-from src.mafia.active_player import ActiveTeamPlayer
-from src.mafia.enums import ServerState
+from src.mafia.active_player import ActivePlayer, ActiveTeamPlayer
+from src.mafia.enums import ServerState, TeamEnum
 from src.mafia.player import Player
-from src.store.utils import remove_server, get_server, start_cooldown, is_cooldown
+from src.store.utils import get_server, start_cooldown, is_cooldown
 from src.bot.mafia.server import MafiaDiscordServer
 
 
@@ -20,9 +20,9 @@ class GameCog(commands.Cog):
 
     @commands.slash_command(name="start-mafia", description="Начать игру", dm_permission=False)
     @is_server_exists(text_error="Игра уже существует", is_true=False)
-    async def start_mafia(self, inter: ApplicationCommandInteraction, server: NoneType):
-        server = MafiaDiscordServer(inter.guild, inter.user, inter)
-        embed = get_pre_start_mafia_embed(server)
+    async def start_mafia(self, inter: ApplicationCommandInteraction, server: None):  # type: ignore[arg-type]
+        game_server = MafiaDiscordServer(inter.guild, inter.user, inter)
+        embed = get_pre_start_mafia_embed(game_server)
 
         await inter.send(
             embed=embed,
@@ -56,11 +56,6 @@ class GameCog(commands.Cog):
 
         await inter.send("Игра принудительно окончена")
 
-    # EVENTS
-    # @commands.Cog.listener(Event.message)
-    # async def active_chat_message(self, message: Message):
-    #     if message.channel.type != ChannelType.private:
-    #         return
     @commands.Cog.listener(Event.button_click)
     async def active_role_selected(self, inter: MessageInteraction):
         data = get_data_from_custom_id(inter.data.custom_id)
@@ -78,7 +73,7 @@ class GameCog(commands.Cog):
 
         server_id, author_id, target_id = data[1:]
 
-        server: MafiaDiscordServer = get_server(int(server_id))
+        server = cast(MafiaDiscordServer, get_server(int(server_id)))
         if not server:
             return await inter.send("Игра не найдена", ephemeral=True)
 
@@ -87,11 +82,14 @@ class GameCog(commands.Cog):
         players_alive = server.get_players_alive()
         author = players_alive.get(int(author_id))
 
+        if not author or not isinstance(author, ActivePlayer):
+            return await inter.send("Вы мертвы или не являетесь участником игры", ephemeral=True)
+
         targets_list = author.get_target_list()
         target = targets_list.get(int(target_id))
 
-        if not author:
-            return await inter.send("Вы мертвы или не являетесь участником игры", ephemeral=True)
+        if not target:
+            return await inter.send("Целевой игрок не найден", ephemeral=True)
 
         if not author.is_valid(target):
             return await inter.send("Вы не можете выбрать данного игрока")
@@ -131,7 +129,7 @@ class GameCog(commands.Cog):
         if author_id == "author_id":
             author_id = inter.user.id
 
-        server: MafiaDiscordServer = get_server(int(server_id))
+        server = cast(MafiaDiscordServer, get_server(int(server_id)))
         if not server:
             return await inter.send("Игра не найдена", ephemeral=True)
 
@@ -168,7 +166,7 @@ class GameCog(commands.Cog):
             self,
             inter: MessageInteraction,
             server: MafiaDiscordServer,
-            author: ActiveTeamPlayer,
+            author: Player,
             target: Player
     ):
         if server.state != ServerState.DAY:
@@ -194,16 +192,17 @@ class GameCog(commands.Cog):
     async def _active_team_player_vote(
             self,
             server: MafiaDiscordServer,
-            author: ActiveTeamPlayer,
+            author: Player,
             target: Player,
             team: str
     ):
         if server.state != ServerState.NIGHT:
             return
 
-        author.vote(target)
+        if isinstance(author, ActiveTeamPlayer):
+            author.vote(target)
 
-        active_team = server.active_teams[team]
+        active_team = server.active_teams[TeamEnum(team)]
 
         await active_team.update_info_voting()
         await active_team.process_end_voting()

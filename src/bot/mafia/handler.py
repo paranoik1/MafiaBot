@@ -72,7 +72,7 @@ class GameHandler(Handler):
         if not self.settings.revealed_roles_mode:
             return embed
 
-        embed.description += f"\n Его роль - **{target.role}**."
+        embed.description = (embed.description or "") + f"\n Его роль - **{target.role}**."
         return embed
 
     def get_player_line(self, player: "Player"):
@@ -136,7 +136,8 @@ class VoiceHandler(Handler):
 
     @is_voice_accompaniment
     async def delete_voice(self):
-        await self.voice_client.channel.delete()
+        if self.voice_client and self.voice_client.channel:
+            await self.voice_client.channel.delete()
 
     @is_voice_accompaniment
     @is_game_mode(GameMode.AUTOMATIC)
@@ -148,8 +149,10 @@ class VoiceHandler(Handler):
 
         await self.server.channel_interaction.send("Все игроки в сборе! Приступаем к игре.")
 
-    def _is_mafia_voice(self, channel: VoiceChannel | None):
-        return self.voice_client and channel.id == self.voice_client.channel.id
+    def _is_mafia_voice_channel(self, channel: VoiceChannel | None) -> bool:
+        if not self.voice_client or not self.voice_client.channel or not channel:
+            return False
+        return channel.id == self.voice_client.channel.id
 
     def _is_all_players_connected_voice_channel(
             self, member: Member, before: VoiceState, after: VoiceState
@@ -162,7 +165,7 @@ class VoiceHandler(Handler):
         player_list = [player.id for player in self.server.players]
 
         if after.channel is not None:
-            if member.id in player_list and self._is_mafia_voice(after.channel):
+            if member.id in player_list and self._is_mafia_voice_channel(after.channel):
                 self.connected_players.append(member.id)
                 asyncio.create_task(
                     self.server.channel_interaction.send(
@@ -170,7 +173,7 @@ class VoiceHandler(Handler):
                     )
                 )
         elif before.channel is not None:
-            if member.id in player_list and self._is_mafia_voice(before.channel) and member.id in self.connected_players:
+            if member.id in player_list and self._is_mafia_voice_channel(before.channel) and member.id in self.connected_players:
                 self.connected_players.remove(member.id)
                 asyncio.create_task(
                     self.server.channel_interaction.send(
@@ -184,12 +187,15 @@ class VoiceHandler(Handler):
         return self.connected_players == player_list
 
     def _play(self, source: str | io.BufferedIOBase, *args, **kwargs):
+        if not self.voice_client:
+            return
+
         if self.voice_client.is_playing():
             self.voice_client.stop()
 
-        source = FFmpegPCMAudio(source, *args, **kwargs)
+        audio_source = FFmpegPCMAudio(source, *args, **kwargs)
 
-        self.voice_client.play(source)
+        self.voice_client.play(audio_source)
 
     @is_voice_accompaniment
     async def play_ready(self):

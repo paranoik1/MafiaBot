@@ -7,7 +7,7 @@ from src.mafia.server import Server
 from .globals import SERVER_REPOSITORY, COOLDOWN_LIST, COOLDOWN
 
 
-def get_server(id: int) -> Server:
+def get_server(id: int) -> Server | None:
     return SERVER_REPOSITORY.get(id)
 
 

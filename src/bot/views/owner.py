@@ -36,7 +36,7 @@ class GameView(View):
 
     @disnake.ui.button(label="Далее", style=BUTTON_STYLE)
     @is_owner_button
-    async def get_games(self, button: disnake.ui.Button, inter: MessageInteraction):
+    async def next_game(self, button: disnake.ui.Button, inter: MessageInteraction):
         emb = get_game_emb(self.num)
         if emb:
             return await inter.response.edit_message(view=GameView(self.num + 1), embed=emb)
@@ -45,7 +45,7 @@ class GameView(View):
 
     @disnake.ui.button(label="Назад", style=BUTTON_STYLE)
     @is_owner_button
-    async def get_games(self, button: disnake.ui.Button, inter: MessageInteraction):
+    async def prev_game(self, button: disnake.ui.Button, inter: MessageInteraction):
         emb = get_game_emb(self.num - 1)
         if emb:
             return await inter.response.edit_message(view=GameView(self.num), embed=emb)

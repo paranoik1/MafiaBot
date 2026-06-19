@@ -1,5 +1,5 @@
 import importlib
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from src.store.config import MafiaConfig
 from ..enums import GameMode
@@ -9,16 +9,16 @@ if TYPE_CHECKING:
 
 
 class Settings:
-    __roles_list = []
-    __civilian_class = None
+    __roles_list: list[type] = []
+    __civilian_class: type | None = None
 
     @classmethod
-    def lazy_import_civilian(cls):
+    def lazy_import_civilian(cls) -> None:
         from .roles import Civilian
         cls.__civilian_class = Civilian
 
     @classmethod
-    def lazy_load_roles_list(cls):
+    def lazy_load_roles_list(cls) -> None:
         module = importlib.import_module("src.mafia.roles")
         cls.__roles_list = [
             role_class
@@ -37,8 +37,8 @@ class Settings:
         self.revealed_roles_mode = True
         self.voice_accompaniment = False
 
-        self._white_roles_list = []
-        self._black_roles_list = []
+        self._white_roles_list: list[type] = []
+        self._black_roles_list: list[type] = []
 
     def update_quantity_players(self, max_players: int, min_players: int) -> tuple[bool, str]:
         if min_players > self.maximum_players or min_players < MafiaConfig.MIN_PLAYERS:
@@ -53,14 +53,14 @@ class Settings:
         return True, ""
 
     @staticmethod
-    def get_all_roles():
+    def get_all_roles() -> list[type]:
         if not Settings.__roles_list:
             Settings.lazy_load_roles_list()
 
         return Settings.__roles_list
 
     @staticmethod
-    def _change_roles_list(list_append: list, list_remove: list, role_class: type):
+    def _change_roles_list(list_append: list[type], list_remove: list[type], role_class: type) -> None:
         if role_class in list_append:
             return
 
@@ -69,17 +69,17 @@ class Settings:
         if role_class in list_remove:
             list_remove.remove(role_class)
 
-    def add_role_to_black_list(self, role_class: type):
+    def add_role_to_black_list(self, role_class: type) -> None:
         self._change_roles_list(self._black_roles_list, self._white_roles_list, role_class)
 
-    def add_role_to_white_list(self, role_class: type):
+    def add_role_to_white_list(self, role_class: type) -> None:
         self._change_roles_list(self._white_roles_list, self._black_roles_list, role_class)
 
     def get_roles_count(self, len_player_list: int) -> dict[type, int]:
-        roles_count = dict()
+        roles_count: dict[type, int] = dict()
         general_count_roles = 0
 
-        def _calculate_count(role: type):
+        def _calculate_count(role: Any) -> int:
             if hasattr(role, "NUM_PLAYERS"):
                 count = len_player_list // role.NUM_PLAYERS
             else:
@@ -103,7 +103,8 @@ class Settings:
             if general_count_roles >= len_player_list:
                 break
 
-            if len_player_list < role_class.APPEARS or role_class in self._black_roles_list:
+            rc: Any = role_class
+            if len_player_list < rc.APPEARS or role_class in self._black_roles_list:
                 continue
 
             roles_count[role_class] = _calculate_count(role_class)
@@ -112,7 +113,8 @@ class Settings:
         if not self.__civilian_class:
             self.lazy_import_civilian()
 
+        civilian_class: Any = self.__civilian_class
         if len_player_list - general_count_roles > 0:
-            roles_count[self.__civilian_class] = len_player_list - general_count_roles
+            roles_count[civilian_class] = len_player_list - general_count_roles
 
         return roles_count

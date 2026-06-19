@@ -77,7 +77,7 @@ def get_embed_voting(server: "MafiaDiscordServer", voting_instance: IVote, playe
     return embed
 
 
-def components_convert_list(components: list[ActionRow[Button]]) -> list[Button]:
+def components_convert_list(components: list[ActionRow]) -> list[Button]:
     component_list = []
     for component in components[0].children:
         component_list.append(
@@ -125,6 +125,8 @@ def get_all_roles_name():
     return list(ROLES_INFO.keys())
 
 
-def get_player_username(bot: Bot, user_id: int):
+def get_player_username(bot: Bot, user_id: int) -> str:
     user = bot.get_user(user_id)
+    if user is None:
+        return str(user_id)
     return user.global_name if user.global_name else user.name

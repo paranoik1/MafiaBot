@@ -13,7 +13,7 @@ class BuyPremiumView(View):
     async def personal_version(self, button: Button, inter: MessageInteraction):
         await self.__buy_method(
             inter,
-            button.label,
+            button.label or "",
             YoomoneyConfig.PRICE_USER_SUBSCRIPTION,
             inter.user.id,
             PremiumType.USER
@@ -26,7 +26,7 @@ class BuyPremiumView(View):
         
         await self.__buy_method(
             inter,
-            button.label,
+            button.label or "",
             YoomoneyConfig.PRICE_GUILD_SUBSCRIPTION,
             inter.guild_id,
             PremiumType.GUILD

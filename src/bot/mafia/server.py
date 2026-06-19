@@ -38,12 +38,12 @@ class MafiaDiscordServer(Server):
         self._game_handler = GameHandler(self)
         self._voice_handler = VoiceHandler(self)
 
-        self._game_task = None
+        self._game_task: asyncio.Task[None] | None = None
 
         self.night_players_choose = Repository[Player]()
         self.night_team_choose: list[ActiveTeamDiscord] = []
 
-        self._killed_players = []
+        self._killed_players: list[Player] = []
 
         self.night_priority = MafiaConfig.MIN_PRIORITY
 
@@ -55,12 +55,13 @@ class MafiaDiscordServer(Server):
 
     async def on_necromancer_awakened_player(self, necromancer: Necromancer, player: Player):
         necromancer_user = self._repository_discord_user.get(necromancer.id)
-        self._repository_discord_user.set(player.id, necromancer_user)
+        if necromancer_user:
+            self._repository_discord_user.set(player.id, necromancer_user)
 
     def add_discord_user(self, user_id: int, user: User):
         self._repository_discord_user.add(user_id, user)
 
-    def get_discord_user(self, user_id: int) -> User:
+    def get_discord_user(self, user_id: int) -> User | None:
         return self._repository_discord_user.get(user_id)
 
     async def day(self):
@@ -74,6 +75,9 @@ class MafiaDiscordServer(Server):
 
     async def send_input_active_role(self, player: ActivePlayer):
         user = self.get_discord_user(player.id)
+        if user is None:
+            return
+
         role_info = ROLES_INFO[player.role]
 
         embed = Embed(title="Выбор", color=GENERAL_COLOR)
@@ -127,8 +131,8 @@ class MafiaDiscordServer(Server):
 
     async def on_witness_saw_killer(self, witness: Witness, killer: ActivePlayer, target: Player):
         user = self.get_discord_user(witness.id)
-
-        await user.send(f"Вы увидели, как {killer.username} убил {target.username}")
+        if user:
+            await user.send(f"Вы увидели, как {killer.username} убил {target.username}")
 
     async def check_win(self):
         team = super().check_win()
@@ -216,7 +220,7 @@ class MafiaDiscordServer(Server):
         async def send_role(player: Player):
             user = inter.bot.get_user(player.id)
 
-            while True:
+            while user is not None:
                 try:
                     await send_embed_role(user, player.role)
                     break
@@ -225,7 +229,8 @@ class MafiaDiscordServer(Server):
                         inter, player, user
                     )
 
-            self.add_discord_user(player.id, user)
+            if user:
+                self.add_discord_user(player.id, user)
 
         await gather(*[send_role(player) for player in players])
 
@@ -256,7 +261,8 @@ class MafiaDiscordServer(Server):
         remove_server(self.id)
 
         await self._voice_handler.delete_voice()
-        self._game_task.cancel()
+        if self._game_task:
+            self._game_task.cancel()
 
     async def exec_night(self, inter: Interaction):
         self._voice_handler.play_night()

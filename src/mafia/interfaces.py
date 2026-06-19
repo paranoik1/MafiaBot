@@ -47,7 +47,7 @@ class IActionable:
 
     async def try_new_night_event(self, player: "Player") -> Optional["NightEvent"]:
         if not self.is_night_activity:
-            return
+            return None
 
         event = await self.new_night_event(player)
         self.server.night_events.append(event)
@@ -55,7 +55,7 @@ class IActionable:
         return event
 
     async def new_night_event(self, player: Optional["Player"] = None) -> "NightEvent":
-        pass
+        raise NotImplementedError
 
     def is_valid(self, player: "Player") -> bool:
         return True

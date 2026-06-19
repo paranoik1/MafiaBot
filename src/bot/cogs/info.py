@@ -27,11 +27,11 @@ class InfoCog(commands.Cog):
             self: commands.Cog,
             inter: ApplicationCommandInteraction,
             *,
-            title: str = None,
-            description: str = None,
-            fields: dict[str, str] = None,
-            image: File = None,
-            color: Color = None
+            title: str | None = None,
+            description: str | None = None,
+            fields: dict[str, str] | None = None,
+            image: File | None = None,
+            color: Color | None = None
     ):
         if not title:
             current_frame = inspect.currentframe()

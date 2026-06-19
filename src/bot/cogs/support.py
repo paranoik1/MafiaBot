@@ -36,7 +36,12 @@ class SupportCog(commands.Cog):
             icon_url=avatar.url if avatar else inter.user.default_avatar
         )
 
-        await self.bot.owner.send(embed=embed)
+        owner = self.bot.owner
+        if not owner:
+            # NOTE: добавить лог: Сообщение не было отправлено, так как owner_id не задан
+            return await inter.send(content='Сообщение не удалось отправить')
+        
+        await owner.send(embed=embed)
         await inter.edit_original_message(content="Сообщение отправлено!")
 
 

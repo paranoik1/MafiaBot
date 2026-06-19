@@ -9,7 +9,7 @@ class ExistsKey(Exception):
 
 
 class Repository[T]:
-    def __init__(self, store: dict[int, T] = None):
+    def __init__(self, store: dict[int, T] | None = None):
         self._store = store if store else dict()
 
     def __iter__(self):
@@ -24,7 +24,9 @@ class Repository[T]:
     def __getitem__(self, index: int):
         return self.to_list()[index]
 
-    def __eq__(self, other: "Repository"):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Repository):
+            return NotImplemented
         return self._store == other._store
 
     def to_list(self):
@@ -39,7 +41,7 @@ class Repository[T]:
     def set(self, id: int, obj: T):
         self._store[id] = obj
 
-    def get(self, id: int) -> T:
+    def get(self, id: int) -> T | None:
         return self._store.get(id)
 
     def remove(self, id: int):

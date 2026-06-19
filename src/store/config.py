@@ -20,9 +20,10 @@ class DBConfig:
     URL_DATABASE = "sqlite+aiosqlite:///db.sqlite3"
 
 
+# FIXME: replace on pydantic-settings
 class DiscordConfig:
     TOKEN = getenv("BOT_TOKEN")
-    OWNER = int(getenv("OWNER_ID"))
+    OWNER = int(getenv("OWNER_ID", "0"))
 
 
 class YoomoneyConfig:

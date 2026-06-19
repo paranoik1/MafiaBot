@@ -34,8 +34,9 @@ class Mafia(ActiveTeamPlayer):
             server.active_teams[TeamEnum.MAFIA]
         )
 
-    async def perform_action(self, player=None):
-        await player.kill(self)
+    async def perform_action(self, player: Optional["Player"] = None):
+        if player is not None:
+            await player.kill(self)
 
 
 class Doctor(ActivePlayer):
@@ -51,9 +52,9 @@ class Doctor(ActivePlayer):
             server.civilian_team
         )
 
-        self.patient = None
+        self.patient: Player | None = None
 
-    async def new_night_event(self, target: Player = None) -> NightEvent:
+    async def new_night_event(self, target: Optional["Player"] = None) -> "NightEvent":
         self.patient = target
         return NightEvent(
             action=ActionNightEnum.TREAT,
@@ -61,10 +62,11 @@ class Doctor(ActivePlayer):
             target=target,
         )
 
-    async def perform_action(self, player=None):
-        self.patient.is_alive = True
+    async def perform_action(self, player: Optional["Player"] = None):
+        if self.patient is not None:
+            self.patient.is_alive = True
 
-    def is_valid(self, player: Player):
+    def is_valid(self, player: Player) -> bool:
         return self.patient != player and player in self.server.get_players_alive()
 
 
@@ -81,7 +83,9 @@ class Comissar(ActivePlayer):
             server.civilian_team,
         )
 
-    async def new_night_event(self, player: Player = None) -> NightEvent:
+    async def new_night_event(self, player: Optional["Player"] = None) -> "NightEvent":
+        if player is None:
+            raise ValueError("Comissar target cannot be None")
         if player.team.title == TeamEnum.MAFIA:
             data = f"Игрок {player.username} является участником мафии"
         else:
@@ -139,8 +143,8 @@ class Werewolf(ActiveTeamPlayer):
         self.is_mafia = True
         self.server.signals.on_death_player.unsubscribe(self.reincarnate)
 
-    async def perform_action(self, player=None):
-        if self.is_mafia:
+    async def perform_action(self, player: Optional["Player"] = None):
+        if self.is_mafia and player is not None:
             await player.kill(self)
 
 
@@ -157,7 +161,7 @@ class Bodyguard(ActivePlayer):
             server.civilian_team
         )
 
-        self.target = None
+        self.target: Player | None = None
         self.server.signals.on_killed_player.subscribe(self.on_killed_player)
 
     async def new_night_event(self, player: Optional["Player"] = None) -> "NightEvent":
@@ -174,7 +178,8 @@ class Bodyguard(ActivePlayer):
     async def on_killed_player(self, player: Player):
         if self.target == player:
             player.is_alive = True
-            await self.kill(player.killer)
+            if player.killer is not None:
+                await self.kill(player.killer)
 
 
 class Maniac(ActivePlayer):
@@ -190,15 +195,16 @@ class Maniac(ActivePlayer):
             OtherTeam()
         )
 
-    async def new_night_event(self, player: Player = None) -> NightEvent:
+    async def new_night_event(self, player: Optional["Player"] = None) -> "NightEvent":
         return NightEvent(
             action=ActionNightEnum.GUT,
             author=self,
             target=player
         )
 
-    async def perform_action(self, player=None):
-        await player.kill(self)
+    async def perform_action(self, player: Optional["Player"] = None):
+        if player is not None:
+            await player.kill(self)
 
 
 class Mistress(ActivePlayer):
@@ -215,7 +221,7 @@ class Mistress(ActivePlayer):
             0
         )
 
-        self.target = None
+        self.target: Player | None = None
 
         server.signals.on_killed_player.subscribe(self.on_killed_player)
         server.signals.on_change_server_state.subscribe(self.change_target_can_vote)
@@ -223,13 +229,13 @@ class Mistress(ActivePlayer):
     def is_valid(self, player: "Player") -> bool:
         return self != player
 
-    async def new_night_event(self, player: Player = None) -> NightEvent:
+    async def new_night_event(self, player: Optional["Player"] = None) -> "NightEvent":
         self.target = player
-
-        self.target.is_can_vote = False
-        self.target.acquitted = True
-        if isinstance(self.target, ActivePlayer):
-            self.target.is_night_activity = False
+        if player is not None:
+            player.is_can_vote = False
+            player.acquitted = True
+            if isinstance(player, ActivePlayer):
+                player.is_night_activity = False
 
         return NightEvent(
             action=ActionNightEnum.DATE_NIGHT,
@@ -237,12 +243,14 @@ class Mistress(ActivePlayer):
             target=player
         )
 
-    async def perform_action(self, player: Player = None):
-        self.target.is_night_activity = True
+    async def perform_action(self, player: Optional["Player"] = None):
+        if isinstance(self.target, ActivePlayer):
+            self.target.is_night_activity = True
 
     async def on_killed_player(self, player: Player):
         if player == self.target:
-            await self.kill(player.killer)
+            if player.killer is not None:
+                await self.kill(player.killer)
 
     async def change_target_can_vote(self, state: ServerState):
         if state == ServerState.NIGHT and self.target:
@@ -278,7 +286,7 @@ class Witness(ActivePlayer):
             server.civilian_team
         )
 
-        self.target = None
+        self.target: Player | None = None
         self.server.signals.on_killed_player.subscribe(self.on_killed_player)
 
     async def new_night_event(self, player: Optional["Player"] = None) -> "NightEvent":
@@ -308,16 +316,17 @@ class Rapist(ActivePlayer):
             0
         )
 
-        self.target = None
+        self.target: Player | None = None
 
         server.signals.on_change_server_state.subscribe(self.change_target_can_vote)
 
-    async def new_night_event(self, player: Player = None) -> NightEvent:
+    async def new_night_event(self, player: Optional["Player"] = None) -> "NightEvent":
         self.target = player
 
-        self.target.is_can_vote = False
-        if isinstance(self.target, ActivePlayer):
-            self.target.is_night_activity = False
+        if player is not None:
+            player.is_can_vote = False
+            if isinstance(player, ActivePlayer):
+                player.is_night_activity = False
 
         return NightEvent(
             action=ActionNightEnum.RETRIBUTION,
@@ -328,8 +337,9 @@ class Rapist(ActivePlayer):
     def is_valid(self, player: "Player") -> bool:
         return self != player
 
-    async def perform_action(self, player: Player = None):
-        self.target.is_night_activity = True
+    async def perform_action(self, player: Optional["Player"] = None):
+        if isinstance(self.target, ActivePlayer):
+            self.target.is_night_activity = True
 
     async def change_target_can_vote(self, state: ServerState):
         if state == ServerState.NIGHT and self.target:
@@ -349,10 +359,13 @@ class Kamikaze(ActivePlayer):
             server.active_teams[TeamEnum.MAFIA]
         )
 
-        self.target = None
+        self.target: Player | None = None
 
     async def new_night_event(self, player: Optional["Player"] = None) -> "NightEvent":
         self.target = player
+
+        if player is None:
+            raise ValueError("Kamikaze target cannot be None")
 
         if player.role == Comissar.ROLE:
             data = "Вы обнаружили Комиссара! Да начнется же возмездие!"
@@ -371,7 +384,7 @@ class Kamikaze(ActivePlayer):
         )
 
     async def perform_action(self, player: Optional["Player"] = None):
-        if self.target.role == Comissar.ROLE:
+        if self.target is not None and self.target.role == Comissar.ROLE:
             await self.target.kill(self)
             await self.kill(self)
 
@@ -390,13 +403,15 @@ class Necromancer(ActivePlayer):
             -1
         )
 
-        self.awakened_list = []
+        self.awakened_list: list[Player] = []
         server.signals.on_change_server_state.subscribe(self.change_can_new_night_event)
 
     def is_valid(self, player: Player) -> bool:
         return player != self and player not in self.awakened_list and not player.is_alive
 
     async def new_night_event(self, player: Optional["Player"] = None) -> "NightEvent":
+        if player is None:
+            raise ValueError("Necromancer target cannot be None")
         self.awakened_list.append(player)
 
         player.is_alive = True
@@ -420,8 +435,9 @@ class Necromancer(ActivePlayer):
         self.is_night_activity = len(players_death) != 0
 
     async def perform_action(self, player: Optional["Player"] = None):
-        player.is_alive = False
-        await self.server.signals.on_awakened_player_sleep.emit(player)
+        if player is not None:
+            player.is_alive = False
+            await self.server.signals.on_awakened_player_sleep.emit(player)
 
     def get_target_list(self):
         return self.get_players_death()

@@ -1,5 +1,5 @@
 from random import choice
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from .base import PlayerGroup, NightEvent
 from .enums import TeamEnum, ActionNightEnum
@@ -32,8 +32,8 @@ class ActiveTeam(Team, IActionable):
 
 
 class MafiaTeam(ActiveTeam):
-    def __init__(self, server: "Server", *args, **kwargs):
-        super().__init__(title=TeamEnum.MAFIA, server=server, *args, **kwargs)
+    def __init__(self, server: "Server", **kwargs):
+        super().__init__(title=TeamEnum.MAFIA, server=server, **kwargs)
 
         self.godfather = None
 
@@ -44,7 +44,7 @@ class MafiaTeam(ActiveTeam):
 
         return players
 
-    async def new_night_event(self, target: "Player" = None):
+    async def new_night_event(self, target: Optional["Player"] = None) -> "NightEvent":
         mafia_players = self.get_players_can_kill()
 
         if len(mafia_players) > 0:

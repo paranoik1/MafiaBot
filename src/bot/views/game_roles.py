@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from disnake import MessageInteraction, Embed
 from disnake.ui import View, button, string_select, StringSelect, Button
 
@@ -24,11 +26,13 @@ class GameManageRoles(View):
 
         self.settings = settings
 
-        self.roles_dict = {
-            role.ROLE: role for role in self.settings.get_all_roles()
-        }
+        roles_dict: dict[str, Any] = {}
+        for role in self.settings.get_all_roles():
+            rc: Any = role
+            roles_dict[rc.ROLE] = role
+        self.roles_dict = roles_dict
 
-        self.selected_role = None
+        self.selected_role: type | None = None
 
     @staticmethod
     def get_roles_embed(server: MafiaDiscordServer):
@@ -36,8 +40,11 @@ class GameManageRoles(View):
 
         roles_count = server.settings.get_roles_count(len(server.pre_players))
 
+        description = embed.description or ""
         for role, count in roles_count.items():
-            embed.description += f"- {role.ROLE} - {count} игрок\n"
+            rc: Any = role
+            description += f"- {rc.ROLE} - {count} игрок\n"
+        embed.description = description
 
         return embed
 
@@ -45,7 +52,7 @@ class GameManageRoles(View):
         await inter.response.defer()
 
         await inter.edit_original_message(
-            embed=self.get_roles_embed(self.settings.server)
+            embed=self.get_roles_embed(cast(MafiaDiscordServer, self.settings.server))
         )
 
     @string_select(options=get_all_roles_name())
@@ -59,22 +66,26 @@ class GameManageRoles(View):
     @button(label="Добавить", style=BUTTON_STYLE)
     @is_role_selected
     async def add_role(self, inter: MessageInteraction):
-        self.settings.add_role_to_white_list(self.selected_role)
-        await self.edit_message_view(inter)
-        await inter.send(
-            f"Роль '{self.selected_role.ROLE}' добавлена в игру",
-            ephemeral=True
-        )
+        role: Any = self.selected_role
+        if role:
+            self.settings.add_role_to_white_list(role)
+            await self.edit_message_view(inter)
+            await inter.send(
+                f"Роль '{role.ROLE}' добавлена в игру",
+                ephemeral=True
+            )
 
     @button(label="Удалить", style=BUTTON_STYLE)
     @is_role_selected
     async def delete_role(self, inter: MessageInteraction):
-        self.settings.add_role_to_black_list(self.selected_role)
-        await self.edit_message_view(inter)
-        await inter.send(
-            f"Роль '{self.selected_role.ROLE}' удалена из игры",
-            ephemeral=True
-        )
+        role: Any = self.selected_role
+        if role:
+            self.settings.add_role_to_black_list(role)
+            await self.edit_message_view(inter)
+            await inter.send(
+                f"Роль '{role.ROLE}' удалена из игры",
+                ephemeral=True
+            )
 
     @button(label="Обновить")
     async def update(self, _: Button, inter: MessageInteraction):

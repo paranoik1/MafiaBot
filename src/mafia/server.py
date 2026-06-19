@@ -67,6 +67,8 @@ class Server(PlayerGroup):
             if quantity_players >= len(players) - quantity_players:
                 return self.active_teams[team]
 
+        return None
+
     def get_night_events(self) -> list[NightEvent]:
         self.night_events.sort()
         return self.night_events.copy()

@@ -5,6 +5,8 @@ from src.bot.mafia.utils import *
 from src.bot.modals.quantity_players import QuantityPlayersModal
 from src.bot.views.game_roles import GameManageRoles
 from src.enums import GameMode
+from typing import cast
+
 from src.mafia.player import PrePlayer
 from src.mafia.settings import Settings
 from src.bot.mafia.server import MafiaDiscordServer
@@ -13,7 +15,7 @@ from src.bot.mafia.server import MafiaDiscordServer
 class ServerSettingsView(View):
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.server: MafiaDiscordServer = settings.server
+        self.server: MafiaDiscordServer = cast(MafiaDiscordServer, settings.server)
 
         super().__init__()
 

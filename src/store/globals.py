@@ -5,4 +5,4 @@ from src.store.repository import Repository
 SERVER_REPOSITORY = Repository[Server]()
 
 COOLDOWN = 2
-COOLDOWN_LIST = []
+COOLDOWN_LIST: list[int] = []
