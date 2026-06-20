@@ -1,10 +1,11 @@
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
-from sqlalchemy import insert, select, delete
+from sqlalchemy import delete, insert, select
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from src.store.config import DBConfig
+
 from .models import *
 
 engine = create_async_engine(DBConfig.URL_DATABASE)
@@ -37,11 +38,9 @@ async def check_premium(id: int) -> bool:
 
 
 async def insert_premium(id: int, type: PremiumType) -> None:
-    sql = insert(Premium).values({
-        "id": id,
-        "expire": datetime.now() + relativedelta(months=1),
-        "type": type
-    })
+    sql = insert(Premium).values(
+        {"id": id, "expire": datetime.now() + relativedelta(months=1), "type": type}
+    )
     async with engine.begin() as conn:
         await conn.execute(sql)
 

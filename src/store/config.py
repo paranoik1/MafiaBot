@@ -1,4 +1,4 @@
-from os import getenv, environ
+from os import environ, getenv
 
 from dotenv import load_dotenv
 
@@ -23,7 +23,7 @@ class DBConfig:
 # FIXME: replace on pydantic-settings
 class DiscordConfig:
     TOKEN = getenv("BOT_TOKEN")
-    OWNER = int(getenv("OWNER_ID", "0"))
+    OWNER_ID = int(getenv("OWNER_ID", "0"))
 
 
 class YoomoneyConfig:

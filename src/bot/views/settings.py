@@ -1,15 +1,15 @@
+from typing import cast
+
 from disnake import MessageInteraction
 from disnake.ui import View, button
 
+from src.bot.mafia.server import MafiaDiscordServer
 from src.bot.mafia.utils import *
 from src.bot.modals.quantity_players import QuantityPlayersModal
 from src.bot.views.game_roles import GameManageRoles
 from src.enums import GameMode
-from typing import cast
-
 from src.mafia.player import PrePlayer
 from src.mafia.settings import Settings
-from src.bot.mafia.server import MafiaDiscordServer
 
 
 class ServerSettingsView(View):
@@ -27,7 +27,8 @@ class ServerSettingsView(View):
 
         await inter.bot.wait_for(
             "modal_submit",
-            check=lambda i: i.custom_id == "quantity_players_modal" and i.author.id == inter.author.id,
+            check=lambda i: i.custom_id == "quantity_players_modal"
+            and i.author.id == inter.author.id,
             timeout=300,
         )
 
@@ -43,22 +44,32 @@ class ServerSettingsView(View):
     async def possible_roles(self, btn: Button, inter: MessageInteraction):
         view = GameManageRoles(self.settings)
         await inter.send(
-            view=view,
-            embed=view.get_roles_embed(self.server),
-            ephemeral=True
+            view=view, embed=view.get_roles_embed(self.server), ephemeral=True
         )
 
     @button(label="Смена режима игры", style=BUTTON_STYLE)
     async def game_mode(self, btn: Button, inter: MessageInteraction):
-        self.settings.game_mode = GameMode.AUTOMATIC if self.settings.game_mode == GameMode.MODERATOR else GameMode.MODERATOR
+        self.settings.game_mode = (
+            GameMode.AUTOMATIC
+            if self.settings.game_mode == GameMode.MODERATOR
+            else GameMode.MODERATOR
+        )
 
-        if self.settings.game_mode == GameMode.MODERATOR and self.server.leader in self.server.pre_players:
+        if (
+            self.settings.game_mode == GameMode.MODERATOR
+            and self.server.leader in self.server.pre_players
+        ):
             self.server.pre_players.remove(self.server.leader.id)
-        elif self.settings.game_mode == GameMode.AUTOMATIC and self.server.leader not in self.server.pre_players:
+        elif (
+            self.settings.game_mode == GameMode.AUTOMATIC
+            and self.server.leader not in self.server.pre_players
+        ):
             pre_player = PrePlayer(self.server.leader.id, self.server.leader.mention)
             self.server.pre_players.add(pre_player.id, pre_player)
 
-        await inter.send("Режим игры был изменен на " + self.settings.game_mode, ephemeral=True)
+        await inter.send(
+            "Режим игры был изменен на " + self.settings.game_mode, ephemeral=True
+        )
 
         embed = get_pre_start_mafia_embed(self.server)
         await self.server.channel_interaction.edit_original_message(embed=embed)
@@ -68,8 +79,9 @@ class ServerSettingsView(View):
         self.settings.revealed_roles_mode = not self.settings.revealed_roles_mode
 
         await inter.send(
-            "Режим раскрытия ролей был " + ("включен" if self.settings.revealed_roles_mode else "выключен"),
-            ephemeral=True
+            "Режим раскрытия ролей был "
+            + ("включен" if self.settings.revealed_roles_mode else "выключен"),
+            ephemeral=True,
         )
 
     @button(label="Голосовое сопровождение", style=BUTTON_STYLE)
@@ -77,6 +89,7 @@ class ServerSettingsView(View):
         self.settings.voice_accompaniment = not self.settings.voice_accompaniment
 
         await inter.send(
-            "Голосове сопрождение было " + ("включено" if self.settings.voice_accompaniment else "выключено"),
-            ephemeral=True
+            "Голосове сопрождение было "
+            + ("включено" if self.settings.voice_accompaniment else "выключено"),
+            ephemeral=True,
         )

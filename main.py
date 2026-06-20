@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+
 import disnake
 
 logging.basicConfig(
@@ -13,13 +14,12 @@ from disnake.ext import commands
 from src.db.engine import db_init
 from src.store.config import DiscordConfig
 
-
 intents = disnake.Intents.all()
 
 bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("."),
-    intents=intents, owner_id=DiscordConfig.OWNER,
-
+    intents=intents,
+    owner_id=DiscordConfig.OWNER_ID,
 )
 
 

@@ -2,11 +2,11 @@ from random import choice
 from typing import TYPE_CHECKING
 
 from .active_player import ActivePlayer, ActiveTeamPlayer
-from .base import PlayerGroup, NightEvent
-from .enums import TeamEnum, ServerState
+from .base import NightEvent, PlayerGroup
+from .enums import ServerState, TeamEnum
 from .settings import Settings
 from .singal import ServerSignals
-from .teams import Team, MafiaTeam
+from .teams import MafiaTeam, Team
 
 if TYPE_CHECKING:
     from .player import PrePlayer
@@ -23,9 +23,7 @@ class Server(PlayerGroup):
         self.state = ServerState.NIGHT
 
         self.civilian_team = Team(TeamEnum.CIVILIAN)
-        self.active_teams = {
-            TeamEnum.MAFIA: MafiaTeam(self)
-        }
+        self.active_teams = {TeamEnum.MAFIA: MafiaTeam(self)}
 
         self.night_events = []
 
@@ -45,23 +43,31 @@ class Server(PlayerGroup):
     def get_active_night_players(self, priority: int = 1):
         players = self.get_players_alive()
         return players.filter(
-            lambda player:
-            isinstance(player, ActivePlayer) and player.priority == priority and
-            (not isinstance(player, ActiveTeamPlayer) or player.is_wakes_up_separately)
+            lambda player: isinstance(player, ActivePlayer)
+            and player.priority == priority
+            and (
+                not isinstance(player, ActiveTeamPlayer)
+                or player.is_wakes_up_separately
+            )
             and player.is_night_activity
         )
 
     def check_win(self) -> Team | None:
         players = self.get_players_alive()
 
-        other_players = players.filter(lambda player: player.team.title == TeamEnum.OTHER)
+        other_players = players.filter(
+            lambda player: player.team.title == TeamEnum.OTHER
+        )
         if len(other_players) == 1 and len(players) <= 2:
             return other_players.to_list()[0].team
 
         if self.civilian_team.get_players_alive() == players:
             return self.civilian_team
 
-        teams = {title: len(team.get_players_alive()) for title, team in self.active_teams.items()}
+        teams = {
+            title: len(team.get_players_alive())
+            for title, team in self.active_teams.items()
+        }
 
         for team, quantity_players in teams.items():
             if quantity_players >= len(players) - quantity_players:
@@ -78,7 +84,9 @@ class Server(PlayerGroup):
         for event in events:
             await event.author.perform_action(event.target)
 
-    def distribute_roles(self, pre_players: list["PrePlayer"], role_counts: dict[type, int]):
+    def distribute_roles(
+        self, pre_players: list["PrePlayer"], role_counts: dict[type, int]
+    ):
         for role, count in role_counts.items():
             for _ in range(count):
                 player = choice(pre_players)

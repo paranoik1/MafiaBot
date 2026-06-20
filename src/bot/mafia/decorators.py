@@ -1,10 +1,11 @@
 import logging
 from asyncio import iscoroutinefunction
-from typing import Coroutine, TYPE_CHECKING
+from typing import TYPE_CHECKING, Coroutine
 
 logger = logging.getLogger(__name__)
 
-from disnake import ApplicationCommandInteraction, Interaction, MessageInteraction
+from disnake import (ApplicationCommandInteraction, Interaction,
+                     MessageInteraction)
 from disnake.ui import Button
 
 from src.db.engine import check_premium
@@ -35,34 +36,49 @@ def is_server_exists(text_error: str = "Игра не найдена", is_true: 
 
 def is_game_started(is_true: bool = True):
     def predicate(func):
-        async def wrapper(self, inter: ApplicationCommandInteraction, server: "MafiaDiscordServer"):
+        async def wrapper(
+            self, inter: ApplicationCommandInteraction, server: "MafiaDiscordServer"
+        ):
             if server.is_started == is_true:
                 await func(self, inter=inter, server=server)
             else:
                 await inter.send("Игра не запущена", ephemeral=True)
 
         return wrapper
+
     return predicate
 
 
-def is_premium(message: str = "Приобретите премиум версию, чтобы получить доступ к данной функции"):
+def is_premium(
+    message: str = "Приобретите премиум версию, чтобы получить доступ к данной функции",
+):
     def predicate(func):
-        async def wrapper(self, inter: ApplicationCommandInteraction, server: "MafiaDiscordServer"):
-            if not await check_premium(inter.guild.id) and not await check_premium(inter.user.id):
+        async def wrapper(
+            self, inter: ApplicationCommandInteraction, server: "MafiaDiscordServer"
+        ):
+            if not await check_premium(inter.guild.id) and not await check_premium(
+                inter.user.id
+            ):
                 return await inter.send(message, ephemeral=True)
 
             return await func(self, inter=inter, server=server)
 
         return wrapper
+
     return predicate
 
 
 def is_leader(func):
-    async def wrapper(self, inter: ApplicationCommandInteraction, server: "MafiaDiscordServer"):
+    async def wrapper(
+        self, inter: ApplicationCommandInteraction, server: "MafiaDiscordServer"
+    ):
         if server.leader == inter.user:
             await func(self, inter=inter, server=server)
         else:
-            await inter.send("Доступ к этим командам есть только у ведущего текущей игры", ephemeral=True)
+            await inter.send(
+                "Доступ к этим командам есть только у ведущего текущей игры",
+                ephemeral=True,
+            )
 
     return wrapper
 

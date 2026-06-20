@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from disnake import Color, ButtonStyle
+from disnake import ButtonStyle, Color
 
 from src.mafia.roles import *
 
@@ -49,7 +49,7 @@ ROLES_INFO = {
         image_file="mafia/",
         color=Color.red(),
         message_for_leader="Мафия убила {0}",
-        message_for_author="Вы убили {0}"
+        message_for_author="Вы убили {0}",
     ),
     GodFather.ROLE: RoleInfo(
         description="""
@@ -60,9 +60,8 @@ ROLES_INFO = {
         image_file="godfather.png",
         color=Color.brand_red(),
         message_for_leader="Мафия убила {0}",
-        message_for_author="Вы убили {0}"
+        message_for_author="Вы убили {0}",
     ),
-
     Doctor.ROLE: RoleInfo(
         description="""
 Доктор - играет за команду мирных жителей. Задача Доктора – понять, кого захочет убить Мафия и попытаться вылечить этого игрока. Каждую ночь имеет право вылечить одного человека от «выстрела» Мафии.
@@ -75,7 +74,7 @@ ROLES_INFO = {
         color=Color.green(),
         message_for_leader="Доктор вылечил {0}",
         message_for_author="Вы вылечили {0}",
-        embed_description="Выберите игрока, которого хотите вылечить"
+        embed_description="Выберите игрока, которого хотите вылечить",
     ),
     Comissar.ROLE: RoleInfo(
         description="""
@@ -89,7 +88,7 @@ ROLES_INFO = {
 """,
         image_file="komisar.png",
         color=Color.brand_green(),
-        embed_description="Выберите игрока, которого хотите проверить"
+        embed_description="Выберите игрока, которого хотите проверить",
     ),
     Immortal.ROLE: RoleInfo(
         description="""
@@ -111,7 +110,7 @@ ROLES_INFO = {
         color=Color.dark_teal(),
         message_for_leader="Любовница посетила {0}",
         message_for_author="Вы проведете ночь с {0}",
-        embed_description="Выберите игрока, с которым вы хотите провести ночь"
+        embed_description="Выберите игрока, с которым вы хотите провести ночь",
     ),
     Rapist.ROLE: RoleInfo(
         description="""
@@ -126,7 +125,7 @@ ROLES_INFO = {
         color=Color.dark_purple(),
         message_for_leader="Насильник изнасиловал {0}",
         message_for_author="Вы изнасиловали {0}",
-        embed_description="Выберите игрока, которого хотите изнасиловать"
+        embed_description="Выберите игрока, которого хотите изнасиловать",
     ),
     Maniac.ROLE: RoleInfo(
         description="""
@@ -141,7 +140,7 @@ ROLES_INFO = {
         color=Color.dark_purple(),
         message_for_leader="Маньяк распотрошил {0}",
         message_for_author="Вы распотрошили {0}",
-        embed_description="Выберите игрока, которого хотите распотрошить"
+        embed_description="Выберите игрока, которого хотите распотрошить",
     ),
     Bodyguard.ROLE: RoleInfo(
         description="""
@@ -153,7 +152,7 @@ ROLES_INFO = {
         color=Color.dark_gold(),
         message_for_leader="Телохранитель защитил {0}",
         message_for_author="Вы защитили {0}",
-        embed_description="Выберите игрока, которого хотите защитить"
+        embed_description="Выберите игрока, которого хотите защитить",
     ),
     Kamikaze.ROLE: RoleInfo(
         description="""
@@ -166,7 +165,7 @@ ROLES_INFO = {
         color=Color.orange(),
         message_for_leader="Камикадзе проверил {0}",
         message_for_author="Вы выбрали {0}",
-        embed_description="Выберите игрока, которого хотите проверить"
+        embed_description="Выберите игрока, которого хотите проверить",
     ),
     Witness.ROLE: RoleInfo(
         description="""
@@ -177,7 +176,7 @@ ROLES_INFO = {
         color=Color.greyple(),
         message_for_leader="Свидетель следит за {0}",
         message_for_author="Вы начали следить за {0}",
-        embed_description="Выберите игрока, за которым будите следить"
+        embed_description="Выберите игрока, за которым будите следить",
     ),
     Werewolf.ROLE: RoleInfo(
         description="""
@@ -202,6 +201,6 @@ ROLES_INFO = {
         color=Color.dark_grey(),
         message_for_author="Вы пробудули из могилы {0}",
         message_for_leader="Некромант пробудил {0}",
-        embed_description="Выберите мертвого игрока, которого вы хотите пробудить для своих целей"
-    )
+        embed_description="Выберите мертвого игрока, которого вы хотите пробудить для своих целей",
+    ),
 }

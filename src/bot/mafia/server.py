@@ -7,19 +7,19 @@ from disnake import Guild, Interaction, MessageInteraction
 
 logger = logging.getLogger(__name__)
 
-from src.bot.mafia.team import MafiaTeamDiscord, ActiveTeamDiscord
+from src.bot.mafia.team import ActiveTeamDiscord, MafiaTeamDiscord
 from src.bot.mafia.utils import *
 from src.mafia.active_player import ActivePlayer
 from src.mafia.enums import TeamEnum
-from src.mafia.player import PrePlayer, Player
-from src.mafia.roles import Witness, Necromancer
+from src.mafia.player import Player, PrePlayer
+from src.mafia.roles import Necromancer, Witness
 from src.mafia.server import Server
 from src.store.config import MafiaConfig
 from src.store.repository import Repository
 from src.store.utils import add_server, remove_server
 
-from .handler import GameHandler, VoiceHandler
 from ..texts import DESCRIPTION_VOTING
+from .handler import GameHandler, VoiceHandler
 
 
 class MafiaDiscordServer(Server):
@@ -54,9 +54,13 @@ class MafiaDiscordServer(Server):
 
         self.signals.on_killed_player.subscribe(self.on_killed_player)
         self.signals.on_witness_saw_killer.subscribe(self.on_witness_saw_killer)
-        self.signals.on_necromancer_awakened_player.subscribe(self.on_necromancer_awakened_player)
+        self.signals.on_necromancer_awakened_player.subscribe(
+            self.on_necromancer_awakened_player
+        )
 
-    async def on_necromancer_awakened_player(self, necromancer: Necromancer, player: Player):
+    async def on_necromancer_awakened_player(
+        self, necromancer: Necromancer, player: Player
+    ):
         necromancer_user = self._repository_discord_user.get(necromancer.id)
         if necromancer_user:
             self._repository_discord_user.set(player.id, necromancer_user)
@@ -79,7 +83,9 @@ class MafiaDiscordServer(Server):
     async def send_input_active_role(self, player: ActivePlayer):
         user = self.get_discord_user(player.id)
         if user is None:
-            logger.warning("Игрок %s: не найден в Discord — ночной ввод пропущен", player.id)
+            logger.warning(
+                "Игрок %s: не найден в Discord — ночной ввод пропущен", player.id
+            )
             return
 
         role_info = ROLES_INFO[player.role]
@@ -100,7 +106,7 @@ class MafiaDiscordServer(Server):
             button = Button(
                 style=BUTTON_STYLE,
                 label=get_player_username(self.bot, player.id),
-                custom_id=f"select-{self.id}-{author.id}-{player.id}"
+                custom_id=f"select-{self.id}-{author.id}-{player.id}",
             )
 
             btns.append(button)
@@ -115,14 +121,24 @@ class MafiaDiscordServer(Server):
 
         for team in self.active_teams.values():
             players_team = team.get_players_participating_in_voting()
-            if len(players_team) > 0 and players_team[0].priority == self.night_priority:
+            if (
+                len(players_team) > 0
+                and players_team[0].priority == self.night_priority
+            ):
                 self.night_team_choose.append(team)
 
         if self.night_team_choose:
-            await asyncio.gather(*[team.start_vote() for team in self.night_team_choose])
+            await asyncio.gather(
+                *[team.start_vote() for team in self.night_team_choose]
+            )
 
         if self.night_players_choose:
-            await asyncio.gather(*[self.send_input_active_role(player) for player in self.night_players_choose])
+            await asyncio.gather(
+                *[
+                    self.send_input_active_role(player)
+                    for player in self.night_players_choose
+                ]
+            )
 
         if not self.night_players_choose and not self.night_team_choose:
             if self.night_priority > MafiaConfig.MAX_PRIORITY:
@@ -133,12 +149,17 @@ class MafiaDiscordServer(Server):
     async def on_killed_player(self, player: Player):
         self._killed_players.append(player)
 
-    async def on_witness_saw_killer(self, witness: Witness, killer: ActivePlayer, target: Player):
+    async def on_witness_saw_killer(
+        self, witness: Witness, killer: ActivePlayer, target: Player
+    ):
         user = self.get_discord_user(witness.id)
         if user:
             await user.send(f"Вы увидели, как {killer.username} убил {target.username}")
         else:
-            logger.warning("Свидетель %s: не найден в Discord — уведомление об убийце пропущено", witness.id)
+            logger.warning(
+                "Свидетель %s: не найден в Discord — уведомление об убийце пропущено",
+                witness.id,
+            )
 
     async def check_win(self):
         team = super().check_win()
@@ -149,9 +170,13 @@ class MafiaDiscordServer(Server):
 
         if team.title == TeamEnum.OTHER:
             player = team.get_players_alive()[0]
-            embed.description = f"В этой игре одержал победу {player.role} {player.username}"
+            embed.description = (
+                f"В этой игре одержал победу {player.role} {player.username}"
+            )
         else:
-            embed.description = f"В этой игре одержала победу команда **'{team.title}'**"
+            embed.description = (
+                f"В этой игре одержала победу команда **'{team.title}'**"
+            )
 
         players_alive = get_players_list_string(self.get_players_alive())
 
@@ -169,13 +194,16 @@ class MafiaDiscordServer(Server):
 
         embed = Embed(title="Итоги ночи", color=GENERAL_COLOR)
 
-        self._killed_players = [player for player in self._killed_players if not player.is_alive]
+        self._killed_players = [
+            player for player in self._killed_players if not player.is_alive
+        ]
 
         field_value = "Сегодня ночью никого не убили"
         if self._killed_players:
             field_value = "Сегодня ночью были убиты:\n"
-            field_value += '\n'.join(
-                self._game_handler.get_player_line(player) for player in self._killed_players
+            field_value += "\n".join(
+                self._game_handler.get_player_line(player)
+                for player in self._killed_players
             )
 
         self._killed_players.clear()
@@ -200,7 +228,9 @@ class MafiaDiscordServer(Server):
         embed = Embed(
             title="Итоги голосования",
             color=GENERAL_COLOR,
-            description="По итогу голосования в тюрьму был посажен {}".format(target.username)
+            description="По итогу голосования в тюрьму был посажен {}".format(
+                target.username
+            ),
         )
 
         embed = self._game_handler.edit_embed_results_voting(target, embed)
@@ -231,14 +261,15 @@ class MafiaDiscordServer(Server):
                     await send_embed_role(user, player.role)
                     break
                 except disnake.errors.Forbidden:
-                    user = await self._game_handler.get_other_user(
-                        inter, player, user
-                    )
+                    user = await self._game_handler.get_other_user(inter, player, user)
 
             if user:
                 self.add_discord_user(player.id, user)
             else:
-                logger.error("Игрок %s: не найден в Discord — роль не отправлена, игрок потерян", player.id)
+                logger.error(
+                    "Игрок %s: не найден в Discord — роль не отправлена, игрок потерян",
+                    player.id,
+                )
 
         await gather(*[send_role(player) for player in players])
 
@@ -250,7 +281,7 @@ class MafiaDiscordServer(Server):
         embed = Embed(
             title="Роли распределены",
             description="Роли отправленны в личные сообщения",
-            color=GENERAL_COLOR
+            color=GENERAL_COLOR,
         )
         await inter.send(embed=embed)
 
@@ -280,7 +311,7 @@ class MafiaDiscordServer(Server):
         embed = Embed(
             title="Ночь",
             description="Наступает ночь. Город засыпает. Просыпаются активные роли. Ждите своего часа остальные.",
-            color=GENERAL_COLOR
+            color=GENERAL_COLOR,
         )
 
         await inter.send(embed=embed)
@@ -297,12 +328,12 @@ class MafiaDiscordServer(Server):
             server=self,
             voting_instance=self,
             players=players,
-            description=DESCRIPTION_VOTING
+            description=DESCRIPTION_VOTING,
         )
         components = get_component_list_players(
             server=self,
             players=self.get_players_participating_in_voting(),
-            custom_id_template=get_custom_id("vote", self.id, "author_id", "{}")
+            custom_id_template=get_custom_id("vote", self.id, "author_id", "{}"),
         )
 
         await inter.send(embed=embed, components=components)

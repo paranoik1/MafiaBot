@@ -1,27 +1,29 @@
 import logging
 from typing import cast
 
-from disnake import ApplicationCommandInteraction, MessageInteraction, Event
+from disnake import ApplicationCommandInteraction, Event, MessageInteraction
 
 logger = logging.getLogger(__name__)
 from disnake.ext import commands
 
 from src.bot.mafia.decorators import *
+from src.bot.mafia.server import MafiaDiscordServer
 from src.bot.mafia.utils import *
 from src.bot.texts import DESCRIPTION_VOTING
 from src.bot.views.pre_start_view import PreStartMafiaView
 from src.mafia.active_player import ActivePlayer, ActiveTeamPlayer
 from src.mafia.enums import ServerState, TeamEnum
 from src.mafia.player import Player
-from src.store.utils import get_server, start_cooldown, is_cooldown
-from src.bot.mafia.server import MafiaDiscordServer
+from src.store.utils import get_server, is_cooldown, start_cooldown
 
 
 class GameCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(name="start-mafia", description="Начать игру", dm_permission=False)
+    @commands.slash_command(
+        name="start-mafia", description="Начать игру", dm_permission=False
+    )
     @is_server_exists(text_error="Игра уже существует", is_true=False)
     async def start_mafia(self, inter: ApplicationCommandInteraction, server: None):  # type: ignore[arg-type]
         game_server = MafiaDiscordServer(inter.guild, inter.user, inter)
@@ -32,24 +34,36 @@ class GameCog(commands.Cog):
             view=PreStartMafiaView(),
         )
 
-    @commands.slash_command(name="voting", description="Начать голосование", dm_permission=False)
+    @commands.slash_command(
+        name="voting", description="Начать голосование", dm_permission=False
+    )
     @is_server_exists()
     @is_leader
     @is_game_started()
-    async def voting(self, inter: ApplicationCommandInteraction, server: MafiaDiscordServer):
+    async def voting(
+        self, inter: ApplicationCommandInteraction, server: MafiaDiscordServer
+    ):
         await server.exec_voting(inter)
 
-    @commands.slash_command(name="night", description="Начать ночь", dm_permission=False)
+    @commands.slash_command(
+        name="night", description="Начать ночь", dm_permission=False
+    )
     @is_server_exists()
     @is_leader
     @is_game_started()
-    async def night(self, inter: ApplicationCommandInteraction, server: MafiaDiscordServer):
+    async def night(
+        self, inter: ApplicationCommandInteraction, server: MafiaDiscordServer
+    ):
         await server.exec_night(inter)
 
-    @commands.slash_command(name="stop-mafia", description="Закончить игру", dm_permission=False)
+    @commands.slash_command(
+        name="stop-mafia", description="Закончить игру", dm_permission=False
+    )
     @is_server_exists("Игра не найдена")
     @is_leader
-    async def stop_mafia(self, inter: ApplicationCommandInteraction, server: MafiaDiscordServer):
+    async def stop_mafia(
+        self, inter: ApplicationCommandInteraction, server: MafiaDiscordServer
+    ):
         try:
             await server.channel_interaction.delete_original_message()
         except:
@@ -68,8 +82,7 @@ class GameCog(commands.Cog):
 
         if is_cooldown(inter.user.id):
             return await inter.send(
-                "Вы слишком часто используете данную функцию",
-                ephemeral=True
+                "Вы слишком часто используете данную функцию", ephemeral=True
             )
 
         print(data)
@@ -86,7 +99,9 @@ class GameCog(commands.Cog):
         author = players_alive.get(int(author_id))
 
         if not author or not isinstance(author, ActivePlayer):
-            return await inter.send("Вы мертвы или не являетесь участником игры", ephemeral=True)
+            return await inter.send(
+                "Вы мертвы или не являетесь участником игры", ephemeral=True
+            )
 
         targets_list = author.get_target_list()
         target = targets_list.get(int(target_id))
@@ -108,7 +123,9 @@ class GameCog(commands.Cog):
         if role_info.message_for_author:
             await inter.send(role_info.message_for_author.format(target.username))
         if role_info.message_for_leader:
-            await server._game_handler.send_leader_message(role_info.message_for_leader.format(target.username))
+            await server._game_handler.send_leader_message(
+                role_info.message_for_leader.format(target.username)
+            )
 
         server.night_players_choose.remove(author.id)
 
@@ -123,8 +140,7 @@ class GameCog(commands.Cog):
 
         if is_cooldown(inter.user.id):
             return await inter.send(
-                "Вы слишком часто используете данную функцию",
-                ephemeral=True
+                "Вы слишком часто используете данную функцию", ephemeral=True
             )
 
         print(data)
@@ -142,7 +158,9 @@ class GameCog(commands.Cog):
         target = players_alive.get(int(target_id))
 
         if not author:
-            return await inter.send("Вы мертвы или не являетесь участником игры", ephemeral=True)
+            return await inter.send(
+                "Вы мертвы или не являетесь участником игры", ephemeral=True
+            )
 
         if not target:
             return await inter.send("Целевой игрок не найден", ephemeral=True)
@@ -152,28 +170,26 @@ class GameCog(commands.Cog):
         if len(data) == 5:
             team = data[4]
             await self._active_team_player_vote(
-                server=server,
-                author=author,
-                target=target,
-                team=team
+                server=server, author=author, target=target, team=team
             )
         else:
             await self._player_vote(
-                inter=inter,
-                server=server,
-                author=author,
-                target=target
+                inter=inter, server=server, author=author, target=target
             )
 
     async def _player_vote(
-            self,
-            inter: MessageInteraction,
-            server: MafiaDiscordServer,
-            author: Player,
-            target: Player
+        self,
+        inter: MessageInteraction,
+        server: MafiaDiscordServer,
+        author: Player,
+        target: Player,
     ):
         if server.state != ServerState.DAY:
-            logger.info("Голос от %s проигнорирован — не дневное время (state=%s)", author.id, server.state)
+            logger.info(
+                "Голос от %s проигнорирован — не дневное время (state=%s)",
+                author.id,
+                server.state,
+            )
             await inter.send("Сейчас не время для голосования.", ephemeral=True)
             return
 
@@ -189,20 +205,22 @@ class GameCog(commands.Cog):
             server=server,
             voting_instance=server,
             players=players,
-            description=DESCRIPTION_VOTING
+            description=DESCRIPTION_VOTING,
         )
 
-        await inter.message.edit(embed=embed, components=components_convert_list(inter.message.components))
+        await inter.message.edit(
+            embed=embed, components=components_convert_list(inter.message.components)
+        )
 
     async def _active_team_player_vote(
-            self,
-            server: MafiaDiscordServer,
-            author: Player,
-            target: Player,
-            team: str
+        self, server: MafiaDiscordServer, author: Player, target: Player, team: str
     ):
         if server.state != ServerState.NIGHT:
-            logger.info("Голос команды от %s проигнорирован — не ночное время (state=%s)", author.id, server.state)
+            logger.info(
+                "Голос команды от %s проигнорирован — не ночное время (state=%s)",
+                author.id,
+                server.state,
+            )
             return
 
         if isinstance(author, ActiveTeamPlayer):

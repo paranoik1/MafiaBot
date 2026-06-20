@@ -9,7 +9,9 @@ if TYPE_CHECKING:
 
 
 class ActivePlayer(Player, IActionable):
-    def __init__(self, id: int, username: str, server: "Server", team: "Team", priority: int = 1):
+    def __init__(
+        self, id: int, username: str, server: "Server", team: "Team", priority: int = 1
+    ):
         Player.__init__(self, id, username, server, team)
         IActionable.__init__(self, server)
 

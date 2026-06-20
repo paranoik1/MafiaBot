@@ -4,7 +4,8 @@ from typing import Any
 from disnake import User
 
 from src.mafia.server import Server
-from .globals import SERVER_REPOSITORY, COOLDOWN_LIST, COOLDOWN
+
+from .globals import COOLDOWN, COOLDOWN_LIST, SERVER_REPOSITORY
 
 
 def get_server(id: int) -> Server | None:

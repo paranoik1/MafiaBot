@@ -1,4 +1,4 @@
-from enum import StrEnum, IntEnum, Enum
+from enum import Enum, IntEnum, StrEnum
 
 
 class ServerState(Enum):
@@ -10,7 +10,7 @@ class TeamEnum(StrEnum):
     CIVILIAN = "Мирные жители"
     MAFIA = "Мафия"
     OTHER = "other"
-    
+
 
 class ActionNightEnum(IntEnum):
     DATE_NIGHT = 0

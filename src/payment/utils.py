@@ -1,7 +1,7 @@
 from random import choices
 from string import ascii_letters
 
-from aioyoomoney import Quickpay, HistoryMethod, OperationStatus
+from aioyoomoney import HistoryMethod, OperationStatus, Quickpay
 
 from src.store.config import YoomoneyConfig
 
@@ -19,18 +19,14 @@ def generate_label(id: int) -> str:
 
 async def get_link_pay(label: str, price: int):
     async with Quickpay(
-        receiver=YoomoneyConfig.RECEIVER,
-        sum=price,
-        label=label
+        receiver=YoomoneyConfig.RECEIVER, sum=price, label=label
     ) as quickpay:
         return quickpay.url
 
 
 async def check_pay(label: str) -> bool:
     async with HistoryMethod(
-        token=YoomoneyConfig.TOKEN,
-        label=label,
-        details=False
+        token=YoomoneyConfig.TOKEN, label=label, details=False
     ) as history:
         if not history.operations:
             return False

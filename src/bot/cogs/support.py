@@ -12,16 +12,13 @@ class SupportCog(commands.Cog):
     @commands.slash_command(
         name="send-owner",
         description="Предложить идею, указать на ошибку или посоветовать чего либо для улучшения бота",
-        dm_permission=False
+        dm_permission=False,
     )
     @commands.cooldown(1, 3600, BucketType.user)
     async def send_owner(
-            self,
-            inter: ApplicationCommandInteraction,
-            content: str = commands.Param(
-                name="сообщение",
-                description="Сообщение"
-            )
+        self,
+        inter: ApplicationCommandInteraction,
+        content: str = commands.Param(name="сообщение", description="Сообщение"),
     ):
         avatar = inter.user.avatar
         guild = inter.guild
@@ -30,17 +27,20 @@ class SupportCog(commands.Cog):
 
         embed = Embed(description=content)
         if guild:
-            embed.set_footer(text="Сервер: " + guild.name + " | " + str(guild.id), icon_url=guild.icon.url if guild.icon else None)
+            embed.set_footer(
+                text="Сервер: " + guild.name + " | " + str(guild.id),
+                icon_url=guild.icon.url if guild.icon else None,
+            )
         embed.set_author(
             name=get_player_username(self.bot, inter.user.id),
-            icon_url=avatar.url if avatar else inter.user.default_avatar
+            icon_url=avatar.url if avatar else inter.user.default_avatar,
         )
 
         owner = self.bot.owner
         if not owner:
             # NOTE: добавить лог: Сообщение не было отправлено, так как owner_id не задан
-            return await inter.send(content='Сообщение не удалось отправить')
-        
+            return await inter.send(content="Сообщение не удалось отправить")
+
         await owner.send(embed=embed)
         await inter.edit_original_message(content="Сообщение отправлено!")
 

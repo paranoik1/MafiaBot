@@ -5,11 +5,12 @@ from disnake import Message
 
 logger = logging.getLogger(__name__)
 
-from src.mafia.active_player import ActiveTeamPlayer, ActivePlayer
+from src.mafia.active_player import ActivePlayer, ActiveTeamPlayer
 from src.mafia.teams import ActiveTeam, MafiaTeam
-from .utils import *
+
 from ...enums import GameMode
-from ...mafia.roles import GodFather, Mafia, Werewolf, Comissar, Kamikaze
+from ...mafia.roles import Comissar, GodFather, Kamikaze, Mafia, Werewolf
+from .utils import *
 
 if TYPE_CHECKING:
     from .server import MafiaDiscordServer
@@ -31,14 +32,17 @@ class ActiveTeamDiscord(ActiveTeam):
         for active_player in active_team_players:
             user = self.server.get_discord_user(active_player.id)
             if user is None:
-                logger.warning("Игрок %s: не найден в Discord — голосование команды пропущено", active_player.id)
+                logger.warning(
+                    "Игрок %s: не найден в Discord — голосование команды пропущено",
+                    active_player.id,
+                )
                 continue
 
             embed = get_embed_voting(
                 server=self.server,
                 voting_instance=self,
                 players=players,
-                description=self.description
+                description=self.description,
             )
             components = self.get_components_voting(active_player, players)
 
@@ -56,13 +60,20 @@ class ActiveTeamDiscord(ActiveTeam):
         players = self.get_players_alive()
         players_participates = self.get_players_participating_in_voting()
 
-        embed = Embed(title=f"Команда {self.title}", colour=GENERAL_COLOR, description="Участники:\n")
+        embed = Embed(
+            title=f"Команда {self.title}",
+            colour=GENERAL_COLOR,
+            description="Участники:\n",
+        )
         embed.description += self._get_players_role_list_string(players)
 
         for player in players_participates:
             user = self.server.get_discord_user(player.id)
             if user is None:
-                logger.warning("Игрок %s: не найден в Discord — отправка роли команды пропущена", player.id)
+                logger.warning(
+                    "Игрок %s: не найден в Discord — отправка роли команды пропущена",
+                    player.id,
+                )
                 continue
             await user.send(embed=embed)
 
@@ -72,11 +83,13 @@ class ActiveTeamDiscord(ActiveTeam):
             server=self.server,
             voting_instance=self,
             players=players,
-            description=self.description
+            description=self.description,
         )
 
         for message in self._messages:
-            await message.edit(embed=embed, components=components_convert_list(message.components))
+            await message.edit(
+                embed=embed, components=components_convert_list(message.components)
+            )
 
     async def process_end_voting(self):
         if not self.is_all_players_voted():
@@ -97,10 +110,14 @@ class ActiveTeamDiscord(ActiveTeam):
         self.server.night_team_choose.remove(self)
 
         role_info = ROLES_INFO[self.players[0].role]
-        await self.server._game_handler.send_leader_message(role_info.message_for_leader.format(target.username))
+        await self.server._game_handler.send_leader_message(
+            role_info.message_for_leader.format(target.username)
+        )
 
         for message in self._messages:
-            await message.channel.send(role_info.message_for_author.format(target.username))
+            await message.channel.send(
+                role_info.message_for_author.format(target.username)
+            )
 
             await message.delete()
 
@@ -108,10 +125,16 @@ class ActiveTeamDiscord(ActiveTeam):
         self.clear_cache_voting()
         return await self.try_new_night_event(target)
 
-    def get_components_voting(self, author: ActiveTeamPlayer, players: Repository[Player]) -> list[Button]:
-        custom_id_template = get_custom_id("vote", self.server.id, author.id, "{}", self.title)
+    def get_components_voting(
+        self, author: ActiveTeamPlayer, players: Repository[Player]
+    ) -> list[Button]:
+        custom_id_template = get_custom_id(
+            "vote", self.server.id, author.id, "{}", self.title
+        )
 
-        components = get_component_list_players(self.server, players, custom_id_template)
+        components = get_component_list_players(
+            self.server, players, custom_id_template
+        )
 
         return components
 
@@ -120,7 +143,7 @@ class MafiaTeamDiscord(MafiaTeam, ActiveTeamDiscord):
     def __init__(self, server: "MafiaDiscordServer"):
         description_vote = "Проголосуйте за игрока, которого вы бы хотели убить"
 
-        super().__init__(server, description_vote=description_vote) # type: ignore
+        super().__init__(server, description_vote=description_vote)  # type: ignore
 
         self.roles_participating_in_voting = [Mafia.ROLE, GodFather.ROLE, Werewolf.ROLE]
         self.server.signals.on_kamikaze_found_commissar.subscribe(self.comissar_founded)
@@ -134,7 +157,9 @@ class MafiaTeamDiscord(MafiaTeam, ActiveTeamDiscord):
         target = info[self.godfather]
 
         for message in self._messages:
-            await message.channel.send(f"Мафия не решила между собой, кого убивать. Крестный отец выбрал {target.username}")
+            await message.channel.send(
+                f"Мафия не решила между собой, кого убивать. Крестный отец выбрал {target.username}"
+            )
 
         await self.end_voting(target)
 
@@ -145,10 +170,15 @@ class MafiaTeamDiscord(MafiaTeam, ActiveTeamDiscord):
             if user:
                 await user.send(content)
             else:
-                logger.warning("Игрок %s: не найден в Discord — сообщение команды пропущено", player.id)
+                logger.warning(
+                    "Игрок %s: не найден в Discord — сообщение команды пропущено",
+                    player.id,
+                )
 
     async def comissar_founded(self, comissar: Comissar):
-        await self._send_messages_team(f"{Kamikaze.ROLE} обнаружил Комиссара - {comissar.username}")
+        await self._send_messages_team(
+            f"{Kamikaze.ROLE} обнаружил Комиссара - {comissar.username}"
+        )
 
     def get_players_participating_in_voting(self):
         players = super().get_players_participating_in_voting()

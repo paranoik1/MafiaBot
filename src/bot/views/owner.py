@@ -1,9 +1,9 @@
 import disnake
-from disnake import MessageInteraction, Embed
+from disnake import Embed, MessageInteraction
 from disnake.ui import View
 
-from ..config import BUTTON_STYLE
 from ...store.globals import SERVER_REPOSITORY
+from ..config import BUTTON_STYLE
 
 
 def is_owner_button(func):
@@ -39,7 +39,9 @@ class GameView(View):
     async def next_game(self, button: disnake.ui.Button, inter: MessageInteraction):
         emb = get_game_emb(self.num)
         if emb:
-            return await inter.response.edit_message(view=GameView(self.num + 1), embed=emb)
+            return await inter.response.edit_message(
+                view=GameView(self.num + 1), embed=emb
+            )
 
         return await inter.response.send_message("Игра не найдена")
 

@@ -5,15 +5,15 @@ from typing import TYPE_CHECKING
 
 logger = logging.getLogger(__name__)
 
-from disnake import Embed, MessageInteraction, User, VoiceClient, VoiceChannel, Event, Member, VoiceState, \
-    FFmpegPCMAudio
+from disnake import (Embed, Event, FFmpegPCMAudio, Member, MessageInteraction,
+                     User, VoiceChannel, VoiceClient, VoiceState)
 
 from src.mafia.player import Player
-from .decorators import is_voice_accompaniment, is_game_mode
 
-from ..config import GENERAL_COLOR
 from ...enums import GameMode
 from ...store.config import MafiaConfig
+from ..config import GENERAL_COLOR
+from .decorators import is_game_mode, is_voice_accompaniment
 
 if TYPE_CHECKING:
     from .server import MafiaDiscordServer
@@ -30,7 +30,9 @@ class GameHandler(Handler):
 
         self.settings = self.server.settings
 
-    async def get_other_user(self, inter: MessageInteraction, player: "Player", user: User) -> User:
+    async def get_other_user(
+        self, inter: MessageInteraction, player: "Player", user: User
+    ) -> User:
         match self.settings.game_mode:
             case GameMode.MODERATOR:
                 await inter.send(
@@ -50,8 +52,8 @@ class GameHandler(Handler):
                 new_inter = await inter.bot.wait_for(
                     "message",
                     check=lambda i: user.id == i.user.id
-                                    and i.channel.id == inter.channel_id
-                                    and len(i.message.mentions) > 0
+                    and i.channel.id == inter.channel_id
+                    and len(i.message.mentions) > 0,
                 )
 
                 user = new_inter.message.mentions[0]
@@ -65,7 +67,12 @@ class GameHandler(Handler):
         leader_embed = Embed(
             title="Роли участников",
             color=GENERAL_COLOR,
-            description="\n".join([f"- {player.username} - **{player.role}**" for player in self.server.players])
+            description="\n".join(
+                [
+                    f"- {player.username} - **{player.role}**"
+                    for player in self.server.players
+                ]
+            ),
         )
 
         await self.server.leader.send(embed=leader_embed)
@@ -74,7 +81,9 @@ class GameHandler(Handler):
         if not self.settings.revealed_roles_mode:
             return embed
 
-        embed.description = (embed.description or "") + f"\n Его роль - **{target.role}**."
+        embed.description = (
+            embed.description or ""
+        ) + f"\n Его роль - **{target.role}**."
         return embed
 
     def get_player_line(self, player: "Player"):
@@ -97,7 +106,7 @@ class GameHandler(Handler):
         embed = Embed(
             title="Обсуждение",
             description=f"У вас есть {MafiaConfig.DISCUSSION_TIME} секунд на обсуждение, после чего начнется голосование",
-            color=GENERAL_COLOR
+            color=GENERAL_COLOR,
         )
 
         await self.server.channel_interaction.send(embed=embed)
@@ -145,28 +154,33 @@ class VoiceHandler(Handler):
     @is_game_mode(GameMode.AUTOMATIC)
     async def wait_players(self):
         await self.bot.wait_for(
-            Event.voice_state_update,
-            check=self._is_all_players_connected_voice_channel
+            Event.voice_state_update, check=self._is_all_players_connected_voice_channel
         )
 
-        await self.server.channel_interaction.send("Все игроки в сборе! Приступаем к игре.")
+        await self.server.channel_interaction.send(
+            "Все игроки в сборе! Приступаем к игре."
+        )
 
     def _is_mafia_voice_channel(self, channel: VoiceChannel | None) -> bool:
         if not self.voice_client or not self.voice_client.channel or not channel:
-            logger.debug("Голосовой клиент или канал отсутствует — проверка голосового канала пропущена")
+            logger.debug(
+                "Голосовой клиент или канал отсутствует — проверка голосового канала пропущена"
+            )
             return False
         return channel.id == self.voice_client.channel.id
 
     def _is_all_players_connected_voice_channel(
-            self, member: Member, before: VoiceState, after: VoiceState
+        self, member: Member, before: VoiceState, after: VoiceState
     ):
         if self.server.is_started:
-            logger.debug("Игра уже началась — изменение голосового состояния проигнорировано")
+            logger.debug(
+                "Игра уже началась — изменение голосового состояния проигнорировано"
+            )
             return
         if after.channel == before.channel:
             logger.debug("Тот же голосовой канал — изменений нет")
             return
-        
+
         player_list = [player.id for player in self.server.players]
 
         if after.channel is not None:
@@ -178,12 +192,14 @@ class VoiceHandler(Handler):
                     )
                 )
         elif before.channel is not None:
-            if member.id in player_list and self._is_mafia_voice_channel(before.channel) and member.id in self.connected_players:
+            if (
+                member.id in player_list
+                and self._is_mafia_voice_channel(before.channel)
+                and member.id in self.connected_players
+            ):
                 self.connected_players.remove(member.id)
                 asyncio.create_task(
-                    self.server.channel_interaction.send(
-                        member.mention + " отключился"
-                    )
+                    self.server.channel_interaction.send(member.mention + " отключился")
                 )
 
         self.connected_players.sort()

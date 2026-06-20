@@ -2,6 +2,7 @@ import importlib
 from typing import TYPE_CHECKING, Any
 
 from src.store.config import MafiaConfig
+
 from ..enums import GameMode
 
 if TYPE_CHECKING:
@@ -15,6 +16,7 @@ class Settings:
     @classmethod
     def lazy_import_civilian(cls) -> None:
         from .roles import Civilian
+
         cls.__civilian_class = Civilian
 
     @classmethod
@@ -24,8 +26,8 @@ class Settings:
             role_class
             for class_name, role_class in vars(module).items()
             if not class_name.startswith("__")
-               and hasattr(role_class, "ROLE")
-               and role_class.ROLE not in ["Мирный житель", ""]
+            and hasattr(role_class, "ROLE")
+            and role_class.ROLE not in ["Мирный житель", ""]
         ]
 
     def __init__(self, server: "Server"):
@@ -40,12 +42,23 @@ class Settings:
         self._white_roles_list: list[type] = []
         self._black_roles_list: list[type] = []
 
-    def update_quantity_players(self, max_players: int, min_players: int) -> tuple[bool, str]:
+    def update_quantity_players(
+        self, max_players: int, min_players: int
+    ) -> tuple[bool, str]:
         if min_players > self.maximum_players or min_players < MafiaConfig.MIN_PLAYERS:
-            return False, "Число минимального кол-ва игроков вышло за допустимые границы"
+            return (
+                False,
+                "Число минимального кол-ва игроков вышло за допустимые границы",
+            )
 
-        if max_players > MafiaConfig.MAX_PLAYERS_PREMIUM or max_players < self.minimum_players:
-            return False, "Число максимального кол-ва игроков вышло за допустимые границы"
+        if (
+            max_players > MafiaConfig.MAX_PLAYERS_PREMIUM
+            or max_players < self.minimum_players
+        ):
+            return (
+                False,
+                "Число максимального кол-ва игроков вышло за допустимые границы",
+            )
 
         self.minimum_players = min_players
         self.maximum_players = max_players
@@ -60,7 +73,9 @@ class Settings:
         return Settings.__roles_list
 
     @staticmethod
-    def _change_roles_list(list_append: list[type], list_remove: list[type], role_class: type) -> None:
+    def _change_roles_list(
+        list_append: list[type], list_remove: list[type], role_class: type
+    ) -> None:
         if role_class in list_append:
             return
 
@@ -70,10 +85,14 @@ class Settings:
             list_remove.remove(role_class)
 
     def add_role_to_black_list(self, role_class: type) -> None:
-        self._change_roles_list(self._black_roles_list, self._white_roles_list, role_class)
+        self._change_roles_list(
+            self._black_roles_list, self._white_roles_list, role_class
+        )
 
     def add_role_to_white_list(self, role_class: type) -> None:
-        self._change_roles_list(self._white_roles_list, self._black_roles_list, role_class)
+        self._change_roles_list(
+            self._white_roles_list, self._black_roles_list, role_class
+        )
 
     def get_roles_count(self, len_player_list: int) -> dict[type, int]:
         roles_count: dict[type, int] = dict()
@@ -90,14 +109,12 @@ class Settings:
 
             return count
 
-
         for role_class in self._white_roles_list:
             if general_count_roles >= len_player_list:
                 break
 
             roles_count[role_class] = _calculate_count(role_class)
             general_count_roles += roles_count[role_class]
-
 
         for role_class in self.get_all_roles():
             if general_count_roles >= len_player_list:

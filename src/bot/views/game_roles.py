@@ -1,9 +1,9 @@
 from typing import Any, cast
 
-from disnake import MessageInteraction, Embed
-from disnake.ui import View, button, string_select, StringSelect, Button
+from disnake import Embed, MessageInteraction
+from disnake.ui import Button, StringSelect, View, button, string_select
 
-from src.bot.config import GENERAL_COLOR, BUTTON_STYLE
+from src.bot.config import BUTTON_STYLE, GENERAL_COLOR
 from src.bot.mafia.decorators import *
 from src.bot.mafia.server import MafiaDiscordServer
 from src.bot.mafia.utils import get_all_roles_name
@@ -70,10 +70,7 @@ class GameManageRoles(View):
         if role:
             self.settings.add_role_to_white_list(role)
             await self.edit_message_view(inter)
-            await inter.send(
-                f"Роль '{role.ROLE}' добавлена в игру",
-                ephemeral=True
-            )
+            await inter.send(f"Роль '{role.ROLE}' добавлена в игру", ephemeral=True)
 
     @button(label="Удалить", style=BUTTON_STYLE)
     @is_role_selected
@@ -82,10 +79,7 @@ class GameManageRoles(View):
         if role:
             self.settings.add_role_to_black_list(role)
             await self.edit_message_view(inter)
-            await inter.send(
-                f"Роль '{role.ROLE}' удалена из игры",
-                ephemeral=True
-            )
+            await inter.send(f"Роль '{role.ROLE}' удалена из игры", ephemeral=True)
 
     @button(label="Обновить")
     async def update(self, _: Button, inter: MessageInteraction):

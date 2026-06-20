@@ -1,6 +1,7 @@
-from dataclasses import field, dataclass
+from dataclasses import dataclass, field
 
 from src.store.repository import Repository
+
 from .active_player import ActivePlayer
 from .enums import ActionNightEnum
 from .interfaces import IVote

@@ -1,13 +1,13 @@
 from random import choice
 from typing import TYPE_CHECKING, Optional
 
-from .base import PlayerGroup, NightEvent
-from .enums import TeamEnum, ActionNightEnum
+from .base import NightEvent, PlayerGroup
+from .enums import ActionNightEnum, TeamEnum
 from .interfaces import IActionable
 
 if TYPE_CHECKING:
-    from .server import Server
     from .player import Player
+    from .server import Server
 
 
 class Team(PlayerGroup):

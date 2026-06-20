@@ -2,11 +2,12 @@ from os import listdir
 from random import choice
 from typing import TYPE_CHECKING
 
-from disnake import Embed, ApplicationCommandInteraction, User, ActionRow, Color, File
+from disnake import (ActionRow, ApplicationCommandInteraction, Color, Embed,
+                     File, User)
 from disnake.ext.commands import Bot
 from disnake.ui import Button
 
-from src.bot.config import ROLES_INFO, GENERAL_COLOR, CARDS_URL, BUTTON_STYLE
+from src.bot.config import BUTTON_STYLE, CARDS_URL, GENERAL_COLOR, ROLES_INFO
 from src.mafia.interfaces import IVote
 from src.mafia.player import Player
 from src.store.repository import Repository
@@ -23,7 +24,7 @@ def get_pre_start_mafia_embed(server: "MafiaDiscordServer"):
     embed = Embed(
         title="Мафия",
         description="Нажмите на кнопку, чтобы принять участие в игре",
-        color=GENERAL_COLOR
+        color=GENERAL_COLOR,
     )
 
     players_string = ""
@@ -45,24 +46,21 @@ async def send_embed_role(inter: ApplicationCommandInteraction | User, role: str
 
     path = CARDS_URL + filename
 
-    embed = Embed(
-        title=role,
-        color=role_info.color,
-        description=role_info.description
-    )
+    embed = Embed(title=role, color=role_info.color, description=role_info.description)
     embed.set_image(file=File(path))
 
     await inter.send(embed=embed)
 
 
-def get_embed_voting(server: "MafiaDiscordServer", voting_instance: IVote, players: Repository[Player], description: str):
+def get_embed_voting(
+    server: "MafiaDiscordServer",
+    voting_instance: IVote,
+    players: Repository[Player],
+    description: str,
+):
     info_vote = voting_instance.get_vote_info()
 
-    embed = Embed(
-        title="Голосование",
-        description=description,
-        color=Color.red()
-    )
+    embed = Embed(title="Голосование", description=description, color=Color.red())
 
     for player in players:
         username = get_player_username(server.bot, player.id)
@@ -81,7 +79,11 @@ def components_convert_list(components: list[ActionRow]) -> list[Button]:
     component_list = []
     for component in components[0].children:
         component_list.append(
-            Button(style=component.style, label=component.label, custom_id=component.custom_id)
+            Button(
+                style=component.style,
+                label=component.label,
+                custom_id=component.custom_id,
+            )
         )
 
     return component_list
@@ -97,7 +99,9 @@ def get_data_from_custom_id(custom_id: str):
     return custom_id.split("-")
 
 
-def get_component_list_players(server: "MafiaDiscordServer", players: Repository[Player], custom_id_template: str) -> list[Button]:
+def get_component_list_players(
+    server: "MafiaDiscordServer", players: Repository[Player], custom_id_template: str
+) -> list[Button]:
     components = []
     for player in players:
         username = get_player_username(server.bot, player.id)
@@ -105,7 +109,7 @@ def get_component_list_players(server: "MafiaDiscordServer", players: Repository
         button = Button(
             style=BUTTON_STYLE,
             label=username,
-            custom_id=custom_id_template.format(player.id)
+            custom_id=custom_id_template.format(player.id),
         )
 
         components.append(button)
