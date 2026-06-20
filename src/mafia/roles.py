@@ -119,6 +119,10 @@ class Werewolf(ActiveTeamPlayer):
         self.is_mafia = False
         server.signals.on_death_player.subscribe(self.reincarnate)
 
+    async def die(self):
+        self.server.signals.on_death_player.unsubscribe(self.reincarnate)
+        return await super().die()
+
     async def reincarnate(self, player: Player):
         if player.team.title != TeamEnum.MAFIA:
             logger.debug(
@@ -157,20 +161,26 @@ class Bodyguard(ActivePlayer):
 
     def is_valid(self, player: "Player") -> bool:
         return self != player
+    
+    async def die(self):
+        self.server.signals.on_killed_player.unsubscribe(self.on_killed_player)
+        return await super().die()
 
     async def on_killed_player(self, player: Player):
-        if self.target == player:
-            player.is_alive = True
-            if player.killer is not None:
-                await self.kill(player.killer)
-            else:
-                logger.debug(
-                    "Телохранитель.on_killed_player: killer is None — возмездие пропущено"
-                )
-        else:
+        if self.target != player:
             logger.debug(
                 "Телохранитель.on_killed_player: убит не подопечный — действие пропущено"
             )
+            return
+        
+        player.is_alive = True
+        if player.killer is not None:
+            await self.kill(player.killer)
+            return
+        
+        logger.debug(
+            "Телохранитель.on_killed_player: killer is None — возмездие пропущено"
+        )
 
 
 class Maniac(ActivePlayer):
@@ -233,19 +243,25 @@ class Mistress(ActivePlayer):
                 "Любовница.perform_action: target не ActivePlayer — ночная активность не восстановлена"
             )
 
+    async def die(self):
+        self.server.signals.on_killed_player.unsubscribe(self.on_killed_player)
+        self.server.signals.on_change_server_state.unsubscribe(self.change_target_can_vote)
+        return await super().die()
+
     async def on_killed_player(self, player: Player):
-        if player == self.target:
-            if player.killer is not None:
-                await self.kill(player.killer)
-            else:
-                logger.debug(
-                    "Любовница.on_killed_player: killer is None — месть пропущена"
-                )
-        else:
+        if player != self.target:
             logger.debug(
                 "Любовница.on_killed_player: убит не целью — действие пропущено"
             )
 
+        if player.killer is not None:
+            await self.kill(player.killer)
+            return
+        
+        logger.debug(
+            "Любовница.on_killed_player: killer is None — месть пропущена"
+        )
+            
     async def change_target_can_vote(self, state: ServerState):
         if state == ServerState.NIGHT and self.target:
             self.target.is_can_vote = True
@@ -285,6 +301,10 @@ class Witness(ActivePlayer):
     async def new_night_event(self, player: Optional["Player"] = None) -> "NightEvent":
         self.target = player
         return NightEvent(action=ActionNightEnum.GUARD, author=self, target=player)
+    
+    async def die(self):
+        self.server.signals.on_killed_player.unsubscribe(self.on_killed_player)
+        return await super().die()
 
     async def on_killed_player(self, player: Player):
         if self.target and (self.target == player or self.target == player.killer):
@@ -339,6 +359,10 @@ class Rapist(ActivePlayer):
             logger.debug(
                 "Насильник.perform_action: target не ActivePlayer — ночная активность не восстановлена"
             )
+
+    async def die(self):
+        self.server.signals.on_change_server_state.unsubscribe(self.change_target_can_vote)
+        return await super().die()
 
     async def change_target_can_vote(self, state: ServerState):
         if state == ServerState.NIGHT and self.target:
@@ -401,6 +425,10 @@ class Necromancer(ActivePlayer):
         return (
             player != self and player not in self.awakened_list and not player.is_alive
         )
+    
+    async def die(self):
+        self.server.signals.on_change_server_state.unsubscribe(self.change_can_new_night_event)
+        return await super().die()
 
     async def new_night_event(self, player: Optional["Player"] = None) -> "NightEvent":
         if player is None:

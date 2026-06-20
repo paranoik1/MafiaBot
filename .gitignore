@@ -13,3 +13,4 @@ setup.sh
 .vscode/
 mafia-bot.service
 .dmypy.json
+*.ipynb

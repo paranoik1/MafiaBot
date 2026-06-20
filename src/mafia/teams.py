@@ -8,6 +8,7 @@ from .interfaces import IActionable
 if TYPE_CHECKING:
     from .player import Player
     from .server import Server
+    from .roles import GodFather
 
 
 class Team(PlayerGroup):
@@ -35,7 +36,7 @@ class MafiaTeam(ActiveTeam):
     def __init__(self, server: "Server", **kwargs):
         super().__init__(title=TeamEnum.MAFIA, server=server, **kwargs)
 
-        self.godfather = None
+        self.godfather: Optional["GodFather"] = None
 
     def get_players_can_kill(self):
         players = self.get_players_participating_in_voting()
@@ -49,7 +50,9 @@ class MafiaTeam(ActiveTeam):
 
         if len(mafia_players) > 0:
             author = choice(mafia_players)
-        else:
+        elif self.godfather:
             author = self.godfather
+        else:
+            raise AttributeError('Не кому убивать')
 
         return NightEvent(ActionNightEnum.KILL, author, target)

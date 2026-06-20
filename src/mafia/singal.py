@@ -1,3 +1,10 @@
+import logging
+from typing import Coroutine
+
+
+logger = logging.getLogger(__name__)
+
+
 class Signal:
     def __init__(self):
         self.handlers = []
@@ -7,7 +14,11 @@ class Signal:
 
         return func
 
-    def unsubscribe(self, func):
+    def unsubscribe(self, func: Coroutine):
+        if func not in self.handlers:
+            logger.warning(f'Функции нет в handlers: {func.__name__}')
+            return
+        
         self.handlers.remove(func)
 
     def subscribe(self, func):

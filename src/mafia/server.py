@@ -89,6 +89,9 @@ class Server(PlayerGroup):
     ):
         for role, count in role_counts.items():
             for _ in range(count):
+                if not pre_players:
+                    raise IndexError('pre_players пуст - необходимо, чтобы кол-во ролей и кол-во игроков совпадали')
+                
                 player = choice(pre_players)
                 player_role = role(player.id, player.username, self)
                 self.add_player(player.id, player_role)
