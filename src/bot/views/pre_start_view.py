@@ -1,7 +1,5 @@
-from asyncio import gather
-
 import disnake
-from disnake import MessageInteraction, Event
+from disnake import MessageInteraction
 from disnake.ui import View
 
 from src.bot.mafia.decorators import *
@@ -9,9 +7,8 @@ from src.bot.mafia.utils import *
 from src.bot.texts import SETTINGS_FIELDS
 from src.bot.views.settings import ServerSettingsView
 from src.enums import GameMode
-from src.mafia.player import PrePlayer, Player
+from src.mafia.player import PrePlayer
 from src.bot.mafia.server import MafiaDiscordServer
-from src.store.repository import ExistsKey
 
 
 class PreStartMafiaView(View):
@@ -21,8 +18,8 @@ class PreStartMafiaView(View):
     @disnake.ui.button(label="Присоединится", style=disnake.ButtonStyle.green)
     @is_server_exists("Игра не найдена")
     async def join_mafia(self, inter: MessageInteraction, server: MafiaDiscordServer):
-        # if inter.user == server.leader and server.settings.game_mode == GameMode.MODERATOR:
-        #     return await inter.send("Ведущий не может принять участие в игре", ephemeral=True)
+        if inter.user == server.leader and server.settings.game_mode == GameMode.MODERATOR:
+            return await inter.send("Ведущий не может принять участие в игре", ephemeral=True)
 
         await inter.response.defer()
 

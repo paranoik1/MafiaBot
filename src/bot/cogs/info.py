@@ -1,5 +1,7 @@
 import inspect
+import logging
 
+import disnake
 from disnake import Embed, Color, ApplicationCommandInteraction, File, Event
 from disnake.ext import commands
 from disnake.ext.commands import Bot
@@ -10,6 +12,9 @@ from ..texts import *
 from ...store.config import YoomoneyConfig
 
 
+logger = logging.getLogger(__name__)
+
+
 class InfoCog(commands.Cog):
     def __init__(self, bot: Bot):
         self.bot = bot
@@ -17,7 +22,14 @@ class InfoCog(commands.Cog):
     @commands.Cog.listener(Event.ready)
     async def ready(self):
         self.bot.owner = self.bot.get_user(self.bot.owner_id)
-        await self.bot.owner.send("Бот готов к работе")
+        if not self.bot.owner:
+            logger.warning(f"owner не была найден: {self.bot.owner_id}")
+            return
+        logger.info(f'Бот готов к работе: {self.bot.user.name}:{self.bot.user.id}')
+        try:
+            await self.bot.owner.send("Бот готов к работе")
+        except disnake.errors.Forbidden:
+            logger.critical('Не удалось отправить сообщение ownerу', exc_info=True)
 
     @commands.Cog.listener(Event.error)
     async def error(self, error):
