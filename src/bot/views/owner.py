@@ -66,4 +66,4 @@ class StateView(View):
         if emb:
             return await inter.response.send_message(view=GameView(1), embed=emb)
 
-        return await inter.response.send_message("Игра не найдена")
+        return await inter.response.send_message("Нет активных игр")
