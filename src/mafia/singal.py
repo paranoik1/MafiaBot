@@ -19,11 +19,12 @@ class Signal:
 
 
 class ServerSignals:
-    on_death_player = Signal()
-    on_killed_player = Signal()
-    on_imprison_player = Signal()
-    on_change_server_state = Signal()
-    on_witness_saw_killer = Signal()
-    on_kamikaze_found_commissar = Signal()
-    on_necromancer_awakened_player = Signal()
-    on_awakened_player_sleep = Signal()
+    def __init__(self):
+        self.on_death_player = Signal()
+        self.on_killed_player = Signal()
+        self.on_imprison_player = Signal()
+        self.on_change_server_state = Signal()
+        self.on_witness_saw_killer = Signal()
+        self.on_kamikaze_found_commissar = Signal()
+        self.on_necromancer_awakened_player = Signal()
+        self.on_awakened_player_sleep = Signal()
