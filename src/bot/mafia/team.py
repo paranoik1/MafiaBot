@@ -100,11 +100,12 @@ class ActiveTeamDiscord(ActiveTeam):
         if len(targets) == 1:
             target = targets[0]
             await self.end_voting(target)
-        else:
-            await self.dispute(targets)
+            return
+        
+        await self.dispute(targets)
 
     async def dispute(self, targets: list):
-        pass
+        raise NotImplementedError
 
     async def end_voting(self, target: Player):
         self.server.night_team_choose.remove(self)
